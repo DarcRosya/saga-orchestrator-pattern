@@ -1,0 +1,81 @@
+[tool.poetry]
+name = "saga-orchestrator"
+version = "0.0.2"
+description = "Saga Orchestrator Pattern - manages distributed transactions via orchestrated sagas"
+authors = ["ZeroMaster"]
+readme = "README.md"
+package-mode = false
+
+# ── Runtime dependencies ─────────────────────────────────────────────────────
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = { extras = ["standard"], version = "^0.115" }
+uvicorn = { extras = ["standard"], version = "^0.34" }
+sqlalchemy = { extras = ["asyncio"], version = "^2.0" }
+asyncpg = "^0.30"          # async PostgreSQL driver
+alembic = "^1.14"          # migrations
+redis = { extras = ["hiredis"], version = "^5.2" }
+arq = "^0.26"              # async Redis-backed task queue
+pydantic-settings = "^2.8"
+httpx = "^0.28"
+tenacity = "^9.0"
+structlog = "^24.4"
+prometheus-fastapi-instrumentator = "^7.0"
+python-ulid = "^3.0"
+
+# ── Development & test dependencies ──────────────────────────────────────────
+[tool.poetry.group.dev.dependencies]
+# Testing
+pytest = "^8.0"
+pytest-asyncio = "^0.23"
+pytest-mock = "^3.14"
+pytest-httpx = "^0.35"           # mock httpx calls in saga steps
+fakeredis = { extras = ["aioredis"], version = "^2.26" }  # in-process Redis mock
+aiosqlite = "^0.20"              # SQLite backend for DB tests
+coverage = { extras = ["toml"], version = "^7.6" }
+
+# Linting / formatting / type checking
+black = "^24.0"
+ruff = "^0.9"
+mypy = "^1.14"
+
+# ── Mock environment (lightweight HTTP mocks of external services) ────────────
+[tool.poetry.group.mock.dependencies]
+fastapi = { extras = ["standard"], version = "^0.115" }
+uvicorn = { extras = ["standard"], version = "^0.34" }
+
+# ── Build system ─────────────────────────────────────────────────────────────
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+# ── Pytest ────────────────────────────────────────────────────────────────────
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+pythonpath = ["src"]        # lets pytest find core, api, db, etc. without install
+
+# ── Coverage ──────────────────────────────────────────────────────────────────
+[tool.coverage.run]
+source = ["src"]
+omit = ["*/tests/*", "*/migrations/*"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+
+# ── Ruff ──────────────────────────────────────────────────────────────────────
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "UP", "B", "SIM"]
+ignore = ["B008"]   # do not perform function calls in default arguments (FastAPI Depends)
+
+# ── Mypy ──────────────────────────────────────────────────────────────────────
+[tool.mypy]
+python_version = "3.12"
+strict = true
+plugins = ["sqlalchemy.ext.mypy.plugin"]
+mypy_path = "src"
