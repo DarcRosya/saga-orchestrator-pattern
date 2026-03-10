@@ -23,7 +23,6 @@ from db.models.types import (
     str100,
     str250,
     str255,
-    text_col,
     updated_at_col,
     uuidpk,
 )
