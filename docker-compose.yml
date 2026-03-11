@@ -43,49 +43,51 @@ services:
       timeout: 5s
       retries: 5
 
-  # api:
-  #   build: ./src
-  #   container_name: saga_api
-  #   command: uvicorn src.main:app --host 0.0.0.0 --port 8000
-  #   restart: unless-stopped
-  #   expose:
-  #     - "8000"
-  #   env_file:
-  #     - .env
-  #   environment:
-  #     DB__HOST: database
-  #     REDIS__R_HOST: redis
-  #   depends_on:
-  #     database:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_started
-  #     migrator:
-  #       condition: service_completed_successfully
-  #   volumes:
-  #     - ./logs:/app/logs
-  #   deploy:
-  #     resources:
-  #       limits:
-  #         cpus: '0.5'
-  #         memory: 256M
-  #       reservations:
-  #         memory: 128M
+  migrator:
+    build:
+      context: .
+      dockerfile: src/Dockerfile
+    container_name: saga_migrator
+    command: poetry run alembic upgrade head
+    env_file:
+      - .env
+    environment:
+      DB__HOST: database
+    depends_on:
+      database:
+        condition: service_healthy
 
-  # migrator:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile.migrator
-  #   container_name: saga_migrator
-  #   command: alembic upgrade head
-  #   restart: "no"
-  #   env_file:
-  #     - .env
-  #   environment:
-  #     - DB__HOST=database
-  #   depends_on:
-  #     database:
-  #       condition: service_healthy
+  api:
+    build:
+      context: .
+      dockerfile: src/Dockerfile
+    container_name: saga_api
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000
+    restart: unless-stopped
+    expose:
+      - "8000"
+    env_file:
+      - .env
+    environment:
+      DB__HOST: database
+      REDIS__R_HOST: redis
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      migrator:
+        condition: service_completed_successfully
+    volumes:
+      - ./logs:/app/logs
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          memory: 128M
+
 
   # scheduler-worker:
   #   build: ./src
