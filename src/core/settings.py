@@ -45,6 +45,15 @@ class RedisSettings(BaseModel):
         )
 
 
+class AuthSettings(BaseModel):
+    """JWT token configuration."""
+
+    SECRET_KEY: SecretStr
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+
+
 class Settings(BaseSettings):
     """
     The main class aggregator, which is the sole source of configuration for the entire application.
@@ -63,6 +72,7 @@ class Settings(BaseSettings):
 
     db: DatabaseSettings
     redis: RedisSettings
+    auth: AuthSettings
 
 
 settings = Settings()  # type: ignore[call-arg]

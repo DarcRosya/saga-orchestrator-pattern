@@ -4,6 +4,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 
+from api.endpoints.user import router as auth_router
 from core.settings import settings
 
 
@@ -40,3 +41,6 @@ app = FastAPI(
 @app.get("/health", tags=["System"])
 async def health_check():
     return {"status": "ok", "service": "saga-api", "version": app.version}
+
+
+app.include_router(auth_router, prefix="/api")
