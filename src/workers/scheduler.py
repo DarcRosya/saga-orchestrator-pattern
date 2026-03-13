@@ -1,39 +1,13 @@
 from datetime import UTC, datetime
-from typing import Any, NamedTuple
+from typing import Any
 
 from arq import cron
 
 from core.settings import settings
-from db.models.enums import SagaStatus
 from db.repositories.order import OrderRepository
 from workers.lifecycle import shutdown, startup
 
-DEFAULT_PENDING_TIMEOUT_SECONDS = 30
 DEFAULT_STUCK_TIMEOUT_SECONDS = 60
-
-
-class CompensationAction(NamedTuple):
-    task_name: str
-    next_status: SagaStatus
-
-
-COMPENSATION_BY_STATUS: dict[SagaStatus, CompensationAction] = {
-    SagaStatus.BILLING_STARTED: CompensationAction(
-        "compensating_billing", SagaStatus.COMPENSATING_BILLING
-    ),
-    SagaStatus.BILLING_COMPLETED: CompensationAction(
-        "compensating_billing", SagaStatus.COMPENSATING_BILLING
-    ),
-    SagaStatus.INVENTORY_STARTED: CompensationAction(
-        "compensating_inventory", SagaStatus.COMPENSATING_INVENTORY
-    ),
-    SagaStatus.INVENTORY_COMPLETED: CompensationAction(
-        "compensating_inventory", SagaStatus.COMPENSATING_INVENTORY
-    ),
-    SagaStatus.LOGISTICS_STARTED: CompensationAction(
-        "compensating_logistics", SagaStatus.COMPENSATING_LOGISTICS
-    ),
-}
 
 
 async def poll_and_dispatch_orders(ctx: dict[str, Any]) -> None:
@@ -46,37 +20,9 @@ async def poll_and_dispatch_orders(ctx: dict[str, Any]) -> None:
         async with session_factory() as session:
             repo = OrderRepository(session)
 
-            # ── Pending orders ────────────────────────────────────────────────
-            try:
-                pending_orders = await repo.get_pending_orders(
-                    timeout_seconds=DEFAULT_PENDING_TIMEOUT_SECONDS
-                )
-            except Exception:
-                # log.exception("scheduler.pending_orders.fetch_failed")
-                pending_orders = []
-
-            for order in pending_orders:
-                try:
-                    await redis.enqueue_job(
-                        "start_order_saga",
-                        order.id,
-                        _job_id=f"start_saga:{order.id}",
-                    )
-                    order.updated_at = datetime.now(UTC)
-                    # log.info(
-                    #     "scheduler.order.enqueued",
-                    #     order_id=str(order.id), job="start_order_saga",
-                    # )
-                except Exception:
-                    # log.exception(
-                    #     "scheduler.order.enqueue_failed",
-                    #     order_id=str(order.id), job="start_order_saga",
-                    # )
-                    pass
-
             # ── Stuck orders (compensation) ───────────────────────────────────
             try:
-                stuck_orders = await repo.get_stuck_orders(
+                stuck_orders = await repo.get_stuck_orders_for_compensation(
                     timeout_seconds=DEFAULT_STUCK_TIMEOUT_SECONDS
                 )
             except Exception:
@@ -84,16 +30,12 @@ async def poll_and_dispatch_orders(ctx: dict[str, Any]) -> None:
                 stuck_orders = []
 
             for order in stuck_orders:
-                action = COMPENSATION_BY_STATUS.get(order.status)
-                if not action:
-                    continue
                 try:
                     await redis.enqueue_job(
-                        action.task_name,
+                        "compensation",
                         order.id,
                         _job_id=f"compensation:{order.id}",
                     )
-                    order.status = action.next_status
                     order.updated_at = datetime.now(UTC)
                     # log.info(
                     #     "scheduler.order.compensation_enqueued",

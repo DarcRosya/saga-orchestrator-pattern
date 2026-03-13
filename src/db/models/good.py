@@ -20,6 +20,3 @@ class Good(Base):
 
     # ── Relationships ─────────────────────────────────────────────────────────
     orders: Mapped[list[Order]] = relationship(back_populates="good")
-
-    def __repr__(self) -> str:
-        return f"<Good id={self.id} name={self.name!r} price={self.price}>"

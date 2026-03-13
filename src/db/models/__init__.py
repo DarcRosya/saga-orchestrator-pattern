@@ -6,9 +6,8 @@ classes are registered on Base.metadata before Alembic or the engine
 sees it — ordering matters for FK resolution.
 """
 
-from db.models.enums import PaymentWay, SagaStatus, UserPrivileges
+from db.models.enums import OrderGlobalStatus, PaymentWay, SagaStepStatus, UserPrivileges
 from db.models.good import Good
-from db.models.order import Order
 from db.models.order_shipping_detail import OrderShippingDetail
 from db.models.refresh_token import RefreshToken
 from db.models.saga_log import SagaLog
@@ -17,6 +16,7 @@ from db.models.types import (
     created_at_col,
     intpk,
     numeric_10_2,
+    servise_status,
     str20,
     str50,
     str64,
@@ -27,10 +27,12 @@ from db.models.types import (
     uuidpk,
 )
 from db.models.user import User
+from db.models.order import Order
 
 __all__ = [
     # enums
-    "SagaStatus",
+    "OrderGlobalStatus",
+    "SagaStepStatus",
     "UserPrivileges",
     "PaymentWay",
     # models
@@ -50,8 +52,8 @@ __all__ = [
     "str100",
     "str250",
     "str255",
-    "text_col",
     "numeric_10_2",
+    "servise_status",
     "created_at_col",
     "updated_at_col",
 ]

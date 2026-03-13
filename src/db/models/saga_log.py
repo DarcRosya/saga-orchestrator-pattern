@@ -24,9 +24,3 @@ class SagaLog(Base):
 
     # ── Relationships ─────────────────────────────────────────────────────────
     order: Mapped[Order] = relationship(back_populates="saga_logs")
-
-    def __repr__(self) -> str:
-        return (
-            f"<SagaLog id={self.id} order_id={self.order_id} "
-            f"action={self.action!r} status={self.status!r}>"
-        )

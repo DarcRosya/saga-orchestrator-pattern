@@ -7,6 +7,8 @@ import uuid6
 from sqlalchemy import BigInteger, Numeric, String, Uuid, func
 from sqlalchemy.orm import mapped_column
 
+from db.models.enums import SagaStepStatus
+
 # ── Primary key ───────────────────────────────────────────────────────────────
 
 intpk = Annotated[int, mapped_column(primary_key=True)]
@@ -42,3 +44,8 @@ updated_at_col = Annotated[
     datetime,
     mapped_column(server_default=func.now(), onupdate=func.now()),
 ]
+
+
+# ── Other ─────────────────────────────────────────────────────────
+
+servise_status = Annotated[SagaStepStatus, mapped_column(default="PENDING")]

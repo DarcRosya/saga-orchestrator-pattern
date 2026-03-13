@@ -25,9 +25,3 @@ class RefreshToken(Base):
 
     # ── Relationships ─────────────────────────────────────────────────────────
     user: Mapped[User] = relationship(back_populates="refresh_tokens")
-
-    def __repr__(self) -> str:
-        return (
-            f"<RefreshToken id={self.id} user_id={self.user_id} "
-            f"jti={self.jti!r} revoked={self.is_revoked}>"
-        )

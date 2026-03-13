@@ -10,7 +10,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - 5432:5432
+      - 5433:5432
     deploy:
       resources:
         limits:
@@ -76,8 +76,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
-      migrator:
-        condition: service_completed_successfully
+      # migrator:
+      #   condition: service_completed_successfully
     volumes:
       - ./logs:/app/logs
     deploy:

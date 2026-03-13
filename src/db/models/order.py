@@ -6,10 +6,11 @@ from sqlalchemy import BigInteger, ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core.database import Base
-from db.models.enums import PaymentWay, SagaStatus
+from db.models.enums import OrderGlobalStatus, PaymentWay
 from db.models.types import (
     created_at_col,
     numeric_10_2,
+    servise_status,
     str255,
     updated_at_col,
     uuidpk,
@@ -30,9 +31,13 @@ class Order(Base):
     buyer_id: Mapped[int | None] = mapped_column(BigInteger, ForeignKey("users.id"))
     good_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("goods.id"))
 
-    status: Mapped[SagaStatus] = mapped_column(default=SagaStatus.PENDING)
-
     idempotency_key: Mapped[str255] = mapped_column(unique=True)
+
+    billing_status: Mapped[servise_status]
+    inventory_status: Mapped[servise_status]
+    logistics_status: Mapped[servise_status]
+
+    global_status: Mapped[OrderGlobalStatus] = mapped_column(default="PROCESSING")
 
     payment_type: Mapped[PaymentWay]
     price: Mapped[numeric_10_2]
@@ -50,6 +55,3 @@ class Order(Base):
     saga_logs: Mapped[list[SagaLog]] = relationship(
         back_populates="order", order_by="SagaLog.created_at"
     )
-
-    def __repr__(self) -> str:
-        return f"<Order id={self.id} status={self.status} buyer_id={self.buyer_id}>"

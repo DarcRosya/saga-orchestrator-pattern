@@ -30,9 +30,3 @@ class OrderShippingDetail(Base):
 
     # ── Relationships ─────────────────────────────────────────────────────────
     order: Mapped[Order] = relationship(back_populates="shipping_detail")
-
-    def __repr__(self) -> str:
-        return (
-            f"<OrderShippingDetail order_id={self.order_id} "
-            f"city={self.city!r} delivery={self.delivery_service!r}>"
-        )

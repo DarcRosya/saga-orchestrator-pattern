@@ -29,6 +29,3 @@ class User(Base):
     # ── Relationships ─────────────────────────────────────────────────────────
     orders: Mapped[list[Order]] = relationship(back_populates="buyer")
     refresh_tokens: Mapped[list[RefreshToken]] = relationship(back_populates="user")
-
-    def __repr__(self) -> str:
-        return f"<User id={self.id} username={self.username!r} role={self.role}>"

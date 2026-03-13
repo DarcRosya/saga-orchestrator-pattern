@@ -1,8 +1,8 @@
-"""init_orders_and_saga_tables
+"""initial migration
 
-Revision ID: b8039d07a1ed
+Revision ID: d5a5091fa9ae
 Revises: 
-Create Date: 2026-03-10 21:37:00.047188
+Create Date: 2026-03-13 19:13:26.439606
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'b8039d07a1ed'
+revision: str = 'd5a5091fa9ae'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -44,8 +44,11 @@ def upgrade() -> None:
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('buyer_id', sa.BigInteger(), nullable=True),
     sa.Column('good_id', sa.BigInteger(), nullable=False),
-    sa.Column('status', sa.Enum('PENDING', 'BILLING_STARTED', 'BILLING_COMPLETED', 'INVENTORY_STARTED', 'INVENTORY_COMPLETED', 'LOGISTICS_STARTED', 'COMPLETED', 'COMPENSATING_LOGISTICS', 'COMPENSATING_INVENTORY', 'COMPENSATING_BILLING', 'CANCELLED', 'REQUIRES_MANUAL_INTERVENTION', name='sagastatus'), nullable=False),
     sa.Column('idempotency_key', sa.String(length=255), nullable=False),
+    sa.Column('billing_status', sa.Enum('PENDING', 'FAILED', 'SUCCESS', 'CANCELLED', 'COMPENSATING', 'COMPENSATED', 'SKIPPED', name='sagastepstatus'), nullable=False),
+    sa.Column('inventory_status', sa.Enum('PENDING', 'FAILED', 'SUCCESS', 'CANCELLED', 'COMPENSATING', 'COMPENSATED', 'SKIPPED', name='sagastepstatus'), nullable=False),
+    sa.Column('logistics_status', sa.Enum('PENDING', 'FAILED', 'SUCCESS', 'CANCELLED', 'COMPENSATING', 'COMPENSATED', 'SKIPPED', name='sagastepstatus'), nullable=False),
+    sa.Column('global_status', sa.Enum('PROCESSING', 'COMPLETED', 'CANCELLED', name='orderglobalstatus'), nullable=False),
     sa.Column('payment_type', sa.Enum('PREPAYMENT', 'POSTPAYMENT', name='paymentway'), nullable=False),
     sa.Column('price', sa.Numeric(precision=10, scale=2), nullable=False),
     sa.Column('quantity', sa.Integer(), nullable=False),
