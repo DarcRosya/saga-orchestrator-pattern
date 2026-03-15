@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, String, Text, Uuid
+from sqlalchemy import ForeignKey, Text, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core.database import Base
@@ -21,7 +21,7 @@ class OrderShippingDetail(Base):
         Uuid(as_uuid=True), ForeignKey("orders.id"), primary_key=True
     )
 
-    guest_email: Mapped[str255 | None] = mapped_column(String(255), default=None)
+    guest_email: Mapped[str255]
     guest_phone: Mapped[str20]
     region: Mapped[str100]
     city: Mapped[str100]
