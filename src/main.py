@@ -34,7 +34,7 @@ app = FastAPI(
     """,
     debug=settings.debug_mode,
     lifespan=lifespan,
-    # servers=[{"url": "/api", "description": "Default"}],
+    root_path="/api",
 )
 
 
@@ -43,4 +43,4 @@ async def health_check():
     return {"status": "ok", "service": "saga-api", "version": app.version}
 
 
-app.include_router(auth_router, prefix="/api")
+app.include_router(auth_router)

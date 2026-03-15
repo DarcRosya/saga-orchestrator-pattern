@@ -116,6 +116,22 @@ services:
   #       reservations:
   #         memory: 64M
 
+  nginx:
+    build: ./nginx
+    container_name: saga_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 64M
+        reservations:
+          memory: 16M
+
 volumes:
   postgres_data:
   redis_data:
