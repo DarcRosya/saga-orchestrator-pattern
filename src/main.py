@@ -2,9 +2,11 @@ import tomllib
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+from arq import create_pool
+from arq.connections import RedisSettings
 from fastapi import FastAPI
 
-from api.endpoints.user import router as auth_router
+from api.endpoints import include_routers  # type: ignore
 from core.settings import settings
 
 
@@ -20,7 +22,16 @@ def get_version() -> str:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    app.state.redis_pool = await create_pool(
+        RedisSettings(
+            host=settings.redis.R_HOST,
+            port=settings.redis.R_PORT,
+        )
+    )
+
     yield  # App is running
+
+    await app.state.redis_pool.close()
 
 
 app = FastAPI(
@@ -43,4 +54,4 @@ async def health_check():
     return {"status": "ok", "service": "saga-api", "version": app.version}
 
 
-app.include_router(auth_router)
+include_routers(app)

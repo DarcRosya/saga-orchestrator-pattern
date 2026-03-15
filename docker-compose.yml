@@ -53,6 +53,7 @@ services:
       - .env
     environment:
       DB__HOST: database
+      DB__PORT: 5432
     depends_on:
       database:
         condition: service_healthy
