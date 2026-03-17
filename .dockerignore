@@ -23,7 +23,5 @@ docker-compose*
 .env*
 *.md
 
-logs/*.json
-
 nginx/
 docs/

@@ -68,7 +68,7 @@ class Settings(BaseSettings):
         env_nested_delimiter="__",
     )
 
-    debug_mode: bool = False
+    DEBUG_MODE: bool = False
 
     db: DatabaseSettings
     redis: RedisSettings

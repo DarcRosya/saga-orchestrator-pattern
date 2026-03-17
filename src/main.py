@@ -5,9 +5,14 @@ from pathlib import Path
 from arq import create_pool
 from arq.connections import RedisSettings
 from fastapi import FastAPI
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from api.endpoints import include_routers  # type: ignore
+from api.middleware import LoggingMiddleware
+from core.logging import setup_logging
 from core.settings import settings
+
+setup_logging()
 
 
 def get_version() -> str:
@@ -43,10 +48,13 @@ app = FastAPI(
     and guarantees eventual consistency during network failures in external services
     (billing, inventory, logistics) by executing transactions or automatic compensations.
     """,
-    debug=settings.debug_mode,
+    debug=settings.DEBUG_MODE,
     lifespan=lifespan,
     root_path="/api",
 )
+
+app.add_middleware(LoggingMiddleware)
+Instrumentator().instrument(app).expose(app)
 
 
 @app.get("/health", tags=["System"])

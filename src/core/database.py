@@ -9,7 +9,7 @@ from core.settings import settings
 
 engine = create_async_engine(
     url=settings.db.DATABASE_URL,
-    echo=settings.debug_mode,
+    echo=settings.DEBUG_MODE,
     pool_size=20,
     max_overflow=10,
     pool_timeout=30.0,

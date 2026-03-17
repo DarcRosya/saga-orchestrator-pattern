@@ -1,3 +1,4 @@
+import structlog
 from arq import ArqRedis
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,6 +9,8 @@ from db.models.user import User
 from db.repositories.good import GoodRepository
 from db.repositories.order import OrderRepository
 from schemas.order import OrderCreate
+
+logger = structlog.get_logger("saga.service.order")
 
 
 class OrderService:
@@ -39,13 +42,23 @@ class OrderService:
         # commit, and accessing them lazily in an async context raises an error.
         order_id = saved_order.id
 
+        logger.info(
+            "order.created",
+            order_id=str(order_id),
+            good_id=str(data.good_id),
+            user_id=str(optional_user.id) if optional_user else None,
+        )
+
         # Commit first — only enqueue after the order is persisted.
         # If enqueue fails, the order is still safe in the DB and can be
         # recovered by the scheduler's stuck-order compensation logic.
         await self._session.commit()
 
-        await redis.enqueue_job(
-            "process_billing", order_id, _job_id=f"billing_{order_id}"
+        await redis.enqueue_job("process_billing", order_id, _job_id=f"billing_{order_id}")
+        logger.info(
+            "order.job.enqueued",
+            job="process_billing",
+            order_id=str(order_id),
         )
 
         return saved_order
