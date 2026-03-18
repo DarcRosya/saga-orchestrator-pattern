@@ -77,8 +77,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
-      # migrator:
-      #   condition: service_completed_successfully
+      migrator:
+        condition: service_completed_successfully
     volumes:
       - ./logs:/app/logs
     deploy:
@@ -89,33 +89,59 @@ services:
         reservations:
           memory: 128M
 
+  scheduler-worker:
+    build:
+      context: .
+      dockerfile: src/Dockerfile
+    container_name: saga_scheduler_worker
+    command: arq src.workers.scheduler.SchedulerWorkerSettings
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DB__HOST: database
+      REDIS__R_HOST: redis
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrator:
+        condition: service_completed_successfully
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+        reservations:
+          memory: 64M
 
-  # scheduler-worker:
-  #   build: ./src
-  #   container_name: saga_scheduler_worker
-  #   command: arq src.worker.scheduler.SchedulerWorkerSettings
-  #   restart: unless-stopped
-  #   env_file:
-  #     - .env
-  #   environment:
-  #     DB__HOST: database
-  #     REDIS__R_HOST: redis
-  #   depends_on:
-  #     database:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_healthy
-  #     migrator:
-  #       condition: service_completed_successfully
-  #   volumes:
-  #     - ./logs:/app/logs
-  #   deploy:
-  #     resources:
-  #       limits:
-  #         cpus: '0.25'
-  #         memory: 128M
-  #       reservations:
-  #         memory: 64M
+  saga-worker:
+    build:
+      context: .
+      dockerfile: src/Dockerfile
+    container_name: saga_worker
+    command: arq src.workers.main_worker.SagaWorkerSettings
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DB__HOST: database
+      REDIS__R_HOST: redis
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrator:
+        condition: service_completed_successfully
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 524M
+        reservations:
+          memory: 128M
 
   nginx:
     build: ./nginx
