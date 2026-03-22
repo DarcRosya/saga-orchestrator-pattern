@@ -17,20 +17,26 @@ class OrderRepository:
         """
         Searches for orders that are stuck in the "PROCESSING" stage,
         but where one of the specific steps has been stuck in "PENDING" for too long.
+        Or it is in COMPENSATING stage and stuck.
         """
-        # Remove timezone info to match PostgreSQL TIMESTAMP WITHOUT TIME ZONE
         threshold = datetime.now(UTC).replace(tzinfo=None) - timedelta(seconds=timeout_seconds)
 
         stmt = select(Order).where(
-            Order.global_status == OrderGlobalStatus.PROCESSING,
-            Order.updated_at < threshold,
             or_(
-                Order.billing_status == SagaStepStatus.PENDING,
-                Order.inventory_status == SagaStepStatus.PENDING,
-                Order.logistics_status == SagaStepStatus.PENDING,
-                Order.billing_status == SagaStepStatus.COMPENSATING,
-                # ... add checks for pending compensation here (maybe)
+                # Stuck processing and needs initial compensation
+                (Order.global_status == OrderGlobalStatus.PROCESSING) & or_(
+                    Order.billing_status == SagaStepStatus.PENDING,
+                    Order.inventory_status == SagaStepStatus.PENDING,
+                    Order.logistics_status == SagaStepStatus.PENDING,
+                ),
+                # Stuck compensating and something is still SUCCESS
+                (Order.global_status == OrderGlobalStatus.COMPENSATING) & or_(
+                    Order.billing_status == SagaStepStatus.SUCCESS,
+                    Order.inventory_status == SagaStepStatus.SUCCESS,
+                    Order.logistics_status == SagaStepStatus.SUCCESS,
+                )
             ),
+            Order.updated_at < threshold,
         )
         result = await self._session.execute(stmt)
         return list(result.scalars().all())
@@ -44,13 +50,10 @@ class OrderRepository:
         idempotency_key = str(order.idempotency_key)
         self._session.add(order)
         try:
-            # `flush` sends an SQL query to the database but does not commit the transaction.
-            # This is where the database checks `unique=True` for `idempotency_key`
             await self._session.flush()
             await self._session.refresh(order)
             return order
         except IntegrityError:
-            # Rollback is required to recover the session after a failed flush.
             await self._session.rollback()
             existing = await self.get_existing_by_idempotency_key(idempotency_key)
             raise DuplicateOrderError(existing) from None

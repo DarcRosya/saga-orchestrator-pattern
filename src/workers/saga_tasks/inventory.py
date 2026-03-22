@@ -42,8 +42,10 @@ async def process_inventory(ctx: dict[str, Any], order_id: uuid.UUID) -> None:
                 log.warning("Order not found during write phase")
                 return
 
-            if order.global_status == OrderGlobalStatus.CANCELLED:
-                log.info("Saga was already cancelled by another worker. Just saving my status.")
+            if order.global_status == OrderGlobalStatus.COMPENSATING:
+                log.info(
+                    "Saga was already started compensation by another worker. Just saving my status."  # noqa: E501
+                )
                 order.inventory_status = inventory_status
                 await session.commit()
                 return
@@ -59,7 +61,7 @@ async def process_inventory(ctx: dict[str, Any], order_id: uuid.UUID) -> None:
                     log.info("All saga steps completed. Order marked as COMPLETED.")
             else:
                 log.info("Inventory check failed, triggering compensation")
-                order.global_status = OrderGlobalStatus.CANCELLED
+                order.global_status = OrderGlobalStatus.COMPENSATING
                 await redis.enqueue_job(
                     "compensation", order_id, _job_id=f"compensation:{order_id}"
                 )

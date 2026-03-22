@@ -6,7 +6,7 @@ from typing import Any
 import structlog
 from sqlalchemy import select
 
-from db.models.enums import PaymentWay, SagaStepStatus
+from db.models.enums import OrderGlobalStatus, PaymentWay, SagaStepStatus
 from db.models.order import Order
 
 logger = structlog.get_logger(__name__)
@@ -64,7 +64,6 @@ async def process_billing(ctx: dict[str, Any], order_id: uuid.UUID) -> None:
                 return
 
             order.billing_status = billing_status
-            await session.commit()
 
             if billing_skip or billing_success:
                 log.info("Billing successful or skipped, proceeding to next steps")
@@ -76,10 +75,12 @@ async def process_billing(ctx: dict[str, Any], order_id: uuid.UUID) -> None:
                 )
             else:
                 log.info("Billing failed, running compensation")
+                order.global_status = OrderGlobalStatus.COMPENSATING
                 await redis.enqueue_job(
                     "compensation", order_id, _job_id=f"compensation:{order_id}"
                 )
 
+            await session.commit()
             log.info("Billing processing completed successfully")
 
     except Exception as e:

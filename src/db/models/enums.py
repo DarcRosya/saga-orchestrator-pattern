@@ -6,7 +6,6 @@ class SagaStepStatus(str, enum.Enum):
     FAILED = "FAILED"
     SUCCESS = "SUCCESS"
     CANCELLED = "CANCELLED"
-    COMPENSATING = "COMPENSATING"
     COMPENSATED = "COMPENSATED"
     SKIPPED = "SKIPPED"
 
@@ -15,6 +14,7 @@ class OrderGlobalStatus(str, enum.Enum):
     PROCESSING = "PROCESSING"
     COMPLETED = "COMPLETED"
     CANCELLED = "CANCELLED"
+    COMPENSATING = "COMPENSATING"
 
 
 class UserPrivileges(str, enum.Enum):
