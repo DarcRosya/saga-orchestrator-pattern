@@ -79,8 +79,6 @@ services:
         condition: service_started
       migrator:
         condition: service_completed_successfully
-    volumes:
-      - ./logs:/app/logs
     deploy:
       resources:
         limits:
@@ -158,6 +156,20 @@ services:
           memory: 64M
         reservations:
           memory: 16M
+
+  mock-services:
+    build: ./mock_env
+    container_name: saga_mock_services
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 128M
+        reservations:
+          memory: 64M
 
 volumes:
   postgres_data:

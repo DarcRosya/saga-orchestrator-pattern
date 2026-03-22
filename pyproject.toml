@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "saga-orchestrator"
-version = "0.4.0"
+version = "0.4.3"
 description = "Saga Orchestrator Pattern - manages distributed transactions via orchestrated sagas"
 authors = ["ZeroMaster"]
 readme = "README.md"
