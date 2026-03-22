@@ -10,7 +10,7 @@ logger = structlog.get_logger("api.middleware")
 
 class LoggingMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
-        request_id = request.headers.get("X-Request-ID") or str(ulid.new())  # type: ignore
+        request_id = request.headers.get("X-Request-ID") or str(ulid.ULID())
 
         # Bind request_id to the context for all subsequent logs in this request
         structlog.contextvars.bind_contextvars(request_id=request_id)

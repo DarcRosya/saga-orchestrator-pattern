@@ -18,7 +18,8 @@ class OrderRepository:
         Searches for orders that are stuck in the "PROCESSING" stage,
         but where one of the specific steps has been stuck in "PENDING" for too long.
         """
-        threshold = datetime.now(UTC) - timedelta(seconds=timeout_seconds)
+        # Remove timezone info to match PostgreSQL TIMESTAMP WITHOUT TIME ZONE
+        threshold = datetime.now(UTC).replace(tzinfo=None) - timedelta(seconds=timeout_seconds)
 
         stmt = select(Order).where(
             Order.global_status == OrderGlobalStatus.PROCESSING,
