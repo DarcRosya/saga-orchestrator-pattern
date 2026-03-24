@@ -3,12 +3,12 @@ from arq import ArqRedis
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.models.order import Order
-from db.models.order_shipping_detail import OrderShippingDetail
-from db.models.user import User
-from db.repositories.good import GoodRepository
-from db.repositories.order import OrderRepository
-from schemas.order import OrderCreate
+from src.db.models.order import Order
+from src.db.models.order_shipping_detail import OrderShippingDetail
+from src.db.models.user import User
+from src.db.repositories.good import GoodRepository
+from src.db.repositories.order import OrderRepository
+from src.schemas.order import OrderCreate
 
 logger = structlog.get_logger("saga.service.order")
 

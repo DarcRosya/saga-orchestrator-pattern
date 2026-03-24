@@ -7,7 +7,7 @@ import uuid6
 from sqlalchemy import BigInteger, Numeric, String, Uuid, func
 from sqlalchemy.orm import mapped_column
 
-from db.models.enums import SagaStepStatus
+from src.db.models.enums import SagaStepStatus
 
 # ── Primary key ───────────────────────────────────────────────────────────────
 

@@ -4,9 +4,9 @@ from sqlalchemy import or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.exceptions import DuplicateOrderError
-from db.models.enums import OrderGlobalStatus, SagaStepStatus
-from db.models.order import Order
+from src.core.exceptions import DuplicateOrderError
+from src.db.models.enums import OrderGlobalStatus, SagaStepStatus
+from src.db.models.order import Order
 
 
 class OrderRepository:

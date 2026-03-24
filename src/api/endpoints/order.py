@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Response, status
 
-from api.dependencies import OptionalCurrentUser, RedisClient
-from core.database import DBSession
-from core.exceptions import DuplicateOrderError
-from db.models.order import Order
-from schemas.order import OrderCreate, OrderResponse
-from services.order import OrderService
+from src.api.dependencies import OptionalCurrentUser, RedisClient
+from src.core.database import DBSession
+from src.core.exceptions import DuplicateOrderError
+from src.db.models.order import Order
+from src.schemas.order import OrderCreate, OrderResponse
+from src.services.order import OrderService
 
 router = APIRouter(prefix="/order", tags=["Order"])
 

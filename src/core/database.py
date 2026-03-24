@@ -5,7 +5,7 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
-from core.settings import settings
+from src.core.settings import settings
 
 engine = create_async_engine(
     url=settings.db.DATABASE_URL,

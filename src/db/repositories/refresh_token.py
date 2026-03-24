@@ -3,7 +3,7 @@ from datetime import datetime
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.models.refresh_token import RefreshToken
+from src.db.models.refresh_token import RefreshToken
 
 
 class RefreshTokenRepository:

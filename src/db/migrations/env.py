@@ -11,9 +11,9 @@ src_path = str(Path(__file__).resolve().parent.parent.parent)
 if src_path not in sys.path:
     sys.path.insert(0, src_path)
 
-from core.database import Base  # noqa: E402
-from core.settings import settings  # noqa: E402
-from db.models import (  # noqa: E402
+from src.core.database import Base  # noqa: E402
+from src.core.settings import settings  # noqa: E402
+from src.db.models import (  # noqa: E402
     Good,  # type: ignore # noqa: F401
     Order,  # type: ignore # noqa: F401
     OrderShippingDetail,  # type: ignore # noqa: F401

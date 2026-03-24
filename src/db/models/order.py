@@ -5,9 +5,9 @@ from typing import TYPE_CHECKING
 from sqlalchemy import BigInteger, ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from core.database import Base
-from db.models.enums import OrderGlobalStatus, PaymentWay
-from db.models.types import (
+from src.core.database import Base
+from src.db.models.enums import OrderGlobalStatus, PaymentWay
+from src.db.models.types import (
     created_at_col,
     servise_status,
     str255,
@@ -16,10 +16,10 @@ from db.models.types import (
 )
 
 if TYPE_CHECKING:
-    from db.models.good import Good
-    from db.models.order_shipping_detail import OrderShippingDetail
-    from db.models.saga_log import SagaLog
-    from db.models.user import User
+    from src.db.models.good import Good
+    from src.db.models.order_shipping_detail import OrderShippingDetail
+    from src.db.models.saga_log import SagaLog
+    from src.db.models.user import User
 
 
 class Order(Base):

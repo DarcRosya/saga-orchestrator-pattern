@@ -4,13 +4,13 @@ from fastapi import HTTPException, status
 from jwt import InvalidTokenError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.settings import settings
-from db.models.user import User
-from db.repositories.refresh_token import RefreshTokenRepository
-from db.repositories.user import UserRepository
-from schemas.auth import LoginRequest, RegisterRequest
-from utils.jwt import TokenType, create_access_token, create_refresh_token, decode_token
-from utils.security import hash_password, verify_password
+from src.core.settings import settings
+from src.db.models.user import User
+from src.db.repositories.refresh_token import RefreshTokenRepository
+from src.db.repositories.user import UserRepository
+from src.schemas.auth import LoginRequest, RegisterRequest
+from src.utils.jwt import TokenType, create_access_token, create_refresh_token, decode_token
+from src.utils.security import hash_password, verify_password
 
 
 class UserService:

@@ -6,11 +6,11 @@ from typing import TYPE_CHECKING
 from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from core.database import Base
-from db.models.types import created_at_col, intpk, str64
+from src.core.database import Base
+from src.db.models.types import created_at_col, intpk, str64
 
 if TYPE_CHECKING:
-    from db.models.user import User
+    from src.db.models.user import User
 
 
 class RefreshToken(Base):

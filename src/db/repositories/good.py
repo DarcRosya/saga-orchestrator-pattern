@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.models.good import Good
+from src.db.models.good import Good
 
 
 class GoodRepository:

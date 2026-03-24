@@ -5,11 +5,11 @@ from typing import TYPE_CHECKING
 from sqlalchemy import ForeignKey, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from core.database import Base
-from db.models.types import created_at_col, str20, str50, uuidpk
+from src.core.database import Base
+from src.db.models.types import created_at_col, str20, str50, uuidpk
 
 if TYPE_CHECKING:
-    from db.models.order import Order
+    from src.db.models.order import Order
 
 
 class SagaLog(Base):

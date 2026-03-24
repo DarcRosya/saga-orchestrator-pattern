@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from db.models.enums import UserPrivileges
+from src.db.models.enums import UserPrivileges
 
 
 class RegisterRequest(BaseModel):

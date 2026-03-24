@@ -2,7 +2,7 @@ import uuid
 
 from pydantic import BaseModel, EmailStr, Field
 
-from db.models.enums import OrderGlobalStatus, PaymentWay
+from src.db.models.enums import OrderGlobalStatus, PaymentWay
 
 
 class OrderShippingDetailsCreate(BaseModel):

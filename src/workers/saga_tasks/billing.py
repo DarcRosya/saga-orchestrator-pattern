@@ -6,8 +6,8 @@ from typing import Any
 import structlog
 from sqlalchemy import select
 
-from db.models.enums import OrderGlobalStatus, PaymentWay, SagaStepStatus
-from db.models.order import Order
+from src.db.models.enums import OrderGlobalStatus, PaymentWay, SagaStepStatus
+from src.db.models.order import Order
 
 logger = structlog.get_logger(__name__)
 

@@ -1,9 +1,15 @@
 from fastapi import APIRouter, status
 
-from api.dependencies import CurrentUser
-from core.database import DBSession
-from schemas.auth import LoginRequest, RefreshRequest, RegisterRequest, TokenResponse, UserResponse
-from services.user import UserService
+from src.api.dependencies import CurrentUser
+from src.core.database import DBSession
+from src.schemas.auth import (
+    LoginRequest,
+    RefreshRequest,
+    RegisterRequest,
+    TokenResponse,
+    UserResponse,
+)
+from src.services.user import UserService
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 

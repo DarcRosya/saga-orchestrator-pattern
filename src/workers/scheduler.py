@@ -4,8 +4,8 @@ from typing import Any
 import structlog
 from arq import cron
 
-from core.settings import settings
-from db.repositories.order import OrderRepository
+from src.core.settings import settings
+from src.db.repositories.order import OrderRepository
 from workers.lifecycle import shutdown, startup
 
 logger = structlog.get_logger("saga.scheduler")

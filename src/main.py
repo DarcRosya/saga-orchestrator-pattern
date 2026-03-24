@@ -7,10 +7,10 @@ from arq.connections import RedisSettings
 from fastapi import FastAPI
 from prometheus_fastapi_instrumentator import Instrumentator
 
-from api.endpoints import include_routers  # type: ignore
-from api.middleware import LoggingMiddleware
-from core.logging import setup_logging
-from core.settings import settings
+from src.api.endpoints import include_routers  # type: ignore
+from src.api.middleware import LoggingMiddleware
+from src.core.logging import setup_logging
+from src.core.settings import settings
 
 setup_logging()
 

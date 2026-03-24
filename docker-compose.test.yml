@@ -1,0 +1,17 @@
+services:
+  test-database:
+    image: postgres:16-bookworm
+    container_name: test-saga-database
+    environment:
+      POSTGRES_USER: ${DB__USER}
+      POSTGRES_PASSWORD: ${DB__PASS}
+      POSTGRES_DB: test_saga_db
+    ports:
+      - "127.0.0.1:5434:5432"
+    tmpfs:
+      - /var/lib/postgresql/data 
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB__USER} -d test_saga_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5

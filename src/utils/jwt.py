@@ -5,7 +5,7 @@ from typing import Any
 
 import jwt
 
-from core.settings import settings
+from src.core.settings import settings
 
 
 class TokenType(StrEnum):

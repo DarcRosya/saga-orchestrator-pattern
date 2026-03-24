@@ -5,13 +5,13 @@ from typing import TYPE_CHECKING
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from core.database import Base
-from db.models.enums import UserPrivileges
-from db.models.types import bigintpk, created_at_col, str20, str255
+from src.core.database import Base
+from src.db.models.enums import UserPrivileges
+from src.db.models.types import bigintpk, created_at_col, str20, str255
 
 if TYPE_CHECKING:
-    from db.models.order import Order
-    from db.models.refresh_token import RefreshToken
+    from src.db.models.order import Order
+    from src.db.models.refresh_token import RefreshToken
 
 
 class User(Base):

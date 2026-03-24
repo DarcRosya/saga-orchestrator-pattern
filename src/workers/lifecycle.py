@@ -2,8 +2,8 @@ from typing import Any
 
 import httpx
 
-from core.database import async_session_factory, engine
-from core.logging import setup_logging
+from src.core.database import async_session_factory, engine
+from src.core.logging import setup_logging
 
 
 async def startup(ctx: dict[str, Any]) -> None:

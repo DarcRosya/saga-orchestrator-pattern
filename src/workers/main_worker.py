@@ -1,4 +1,4 @@
-from core.settings import settings
+from src.core.settings import settings
 from workers.lifecycle import shutdown, startup
 from workers.saga_tasks.billing import process_billing
 from workers.saga_tasks.compensation import compensation
