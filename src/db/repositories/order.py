@@ -13,6 +13,11 @@ class OrderRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
+    async def get(self, order_id: str) -> Order | None:
+        stmt = select(Order).where(Order.id == order_id)
+        result = await self._session.execute(stmt)
+        return result.scalar_one_or_none()
+
     async def get_stuck_orders_for_compensation(self, timeout_seconds: int = 60) -> list[Order]:
         """
         Searches for orders that are stuck in the "PROCESSING" stage,

@@ -40,7 +40,7 @@ async def process_logistic(ctx: dict[str, Any], order_id: uuid.UUID) -> None:
                 log.warning("Order not found during write phase")
                 return
 
-            if order.status == OrderGlobalStatus.COMPENSATING:
+            if order.global_status == OrderGlobalStatus.COMPENSATING:
                 log.info(
                     "Saga was already started compensation by another worker. Just saving my status."  # noqa: E501
                 )
@@ -55,11 +55,11 @@ async def process_logistic(ctx: dict[str, Any], order_id: uuid.UUID) -> None:
                     SagaStepStatus.SUCCESS,
                     SagaStepStatus.SKIPPED,
                 ):
-                    order.status = OrderGlobalStatus.COMPLETED
+                    order.global_status = OrderGlobalStatus.COMPLETED
                     log.info("All saga steps completed. Order marked as COMPLETED.")
             else:
                 log.info("Logistic check failed, triggering compensation")
-                order.status = OrderGlobalStatus.COMPENSATING
+                order.global_status = OrderGlobalStatus.COMPENSATING
                 await redis.enqueue_job(
                     "compensation", order_id, _job_id=f"compensation:{order_id}"
                 )

@@ -19,6 +19,9 @@ class UserService:
         self._token_repo = RefreshTokenRepository(session)
         self._session = session
 
+    async def get(self, user_id: int) -> User | None:
+        return await self._user_repo.get_by_id(user_id)
+
     async def register(self, data: RegisterRequest) -> tuple[User, str, str]:
         if await self._user_repo.get_by_username(data.username):
             raise HTTPException(

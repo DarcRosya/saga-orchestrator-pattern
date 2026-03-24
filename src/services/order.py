@@ -19,6 +19,9 @@ class OrderService:
         self._good_repo = GoodRepository(session)
         self._session = session
 
+    async def get(self, order_id: str) -> Order | None:
+        return await self._order_repo.get(order_id)
+
     async def create(self, redis: ArqRedis, data: OrderCreate, optional_user: User | None) -> Order:
         good = await self._good_repo.get(data.good_id)
         if good is None:
@@ -32,7 +35,6 @@ class OrderService:
 
         new_order = Order(
             **order_data,
-            price=good.price,
             buyer_id=optional_user.id if optional_user else None,
             shipping_detail=shipping_detail,
         )

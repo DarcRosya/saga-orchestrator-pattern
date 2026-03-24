@@ -9,7 +9,6 @@ from core.database import Base
 from db.models.enums import OrderGlobalStatus, PaymentWay
 from db.models.types import (
     created_at_col,
-    numeric_10_2,
     servise_status,
     str255,
     updated_at_col,
@@ -40,7 +39,6 @@ class Order(Base):
     global_status: Mapped[OrderGlobalStatus] = mapped_column(default="PROCESSING")
 
     payment_type: Mapped[PaymentWay]
-    price: Mapped[numeric_10_2]
     quantity: Mapped[int] = mapped_column(Integer)
 
     created_at: Mapped[created_at_col]
