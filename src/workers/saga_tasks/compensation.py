@@ -42,7 +42,7 @@ async def compensation(ctx: dict[str, Any], order_id: uuid.UUID) -> None:
         logistics_cancel = order.logistics_status == SagaStepStatus.SUCCESS
 
         order.global_status = OrderGlobalStatus.COMPENSATING
-        order.updated_at = datetime.now(UTC)
+        order.updated_at = datetime.now(UTC).replace(tzinfo=None)
         await session.commit()
 
     tasks: list[Coroutine[Any, Any, tuple[str, bool]]] = []

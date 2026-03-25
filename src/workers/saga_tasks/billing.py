@@ -75,6 +75,8 @@ async def process_billing(ctx: dict[str, Any], order_id: uuid.UUID) -> None:
                 )
             else:
                 log.info("Billing failed, running compensation")
+                order.inventory_status = SagaStepStatus.CANCELLED
+                order.logistics_status = SagaStepStatus.CANCELLED
                 order.global_status = OrderGlobalStatus.COMPENSATING
                 await redis.enqueue_job(
                     "compensation", order_id, _job_id=f"compensation:{order_id}"

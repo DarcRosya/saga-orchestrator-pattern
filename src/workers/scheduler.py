@@ -39,7 +39,7 @@ async def poll_and_dispatch_orders(ctx: dict[str, Any]) -> None:
                         order.id,
                         _job_id=f"compensation:{order.id}",
                     )
-                    order.updated_at = datetime.now(UTC)
+                    order.updated_at = datetime.now(UTC).replace(tzinfo=None)
                     logger.info(
                         "scheduler.order.compensation_enqueued",
                         order_id=str(order.id),
