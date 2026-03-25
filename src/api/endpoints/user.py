@@ -42,5 +42,8 @@ async def logout(body: RefreshRequest, session: DBSession) -> None:
 
 
 @router.get("/me", response_model=UserResponse)
-async def me(current_user: CurrentUser) -> UserResponse:
-    return UserResponse.model_validate(current_user)
+async def me(current_user: CurrentUser, session: DBSession) -> UserResponse:
+    from src.db.repositories.user import UserRepository
+    repo = UserRepository(session)
+    user = await repo.get_by_id(current_user.id)
+    return UserResponse.model_validate(user)
