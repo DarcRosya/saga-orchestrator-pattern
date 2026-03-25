@@ -55,7 +55,7 @@ async def test_create_order_success(
 
     # Verify Redis enqueue
     mock_redis.enqueue_job.assert_called_once_with(
-        "process_billing", order.id, _job_id=f"billing_{order.id}"
+        "process_billing", str(order.id), _job_id=f"billing_{order.id}"
     )
 
 
@@ -118,7 +118,7 @@ async def test_create_order_good_not_found(api_client: AsyncClient, mock_redis):
 
     # Assert
     assert response.status_code == 404
-    assert response.json()["detail"] == "Good not found."
+    assert "Goods not found" in response.json()["detail"]
 
     mock_redis.enqueue_job.assert_not_called()
 
@@ -190,3 +190,67 @@ async def test_create_order_invalid_jwt(
     assert response.json()["detail"] == "Invalid or expired token."
 
     mock_redis.enqueue_job.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_create_order_bulk_success(
+    api_client: AsyncClient,
+    db_session: AsyncSession,
+    mock_redis,
+):
+    # Arrange
+    good1 = Good(name="Laptop", price=1500.0)
+    good2 = Good(name="Mouse", price=300.0)
+    db_session.add_all([good1, good2])
+    await db_session.commit()
+
+    payload = [
+        {
+            "good_id": good1.id,
+            "idempotency_key": str(uuid.uuid4()),
+            "payment_type": "prepayment",
+            "quantity": 2,
+            "order_details": {
+                "guest_email": "test@example.com",
+                "guest_phone": "+123",
+                "region": "NY",
+                "city": "NY",
+                "delivery_service": "FedEx",
+                "postal_address": "123 Main",
+            },
+        },
+        {
+            "good_id": good2.id,
+            "idempotency_key": str(uuid.uuid4()),
+            "payment_type": "postpayment",
+            "quantity": 5,
+            "order_details": {
+                "guest_email": "test2@example.com",
+                "guest_phone": "+124",
+                "region": "CA",
+                "city": "SF",
+                "delivery_service": "UPS",
+                "postal_address": "456 Side",
+            },
+        },
+    ]
+
+    # Act
+    response = await api_client.post("/order/", json=payload)
+
+    # Assert
+    assert response.status_code == 201
+    data = response.json()
+    assert isinstance(data, list)
+    assert len(data) == 2
+
+    # Verify DB
+    ids = [d["id"] for d in data]
+    from sqlalchemy import select
+
+    res = await db_session.execute(select(Order).where(Order.id.in_(ids)))
+    orders = res.scalars().all()
+    assert len(orders) == 2
+
+    # Verify Redis enqueue
+    assert mock_redis.enqueue_job.call_count == 2

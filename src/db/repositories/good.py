@@ -12,3 +12,8 @@ class GoodRepository:
         stmt = select(Good).where(Good.id == good_id)
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
+
+    async def get_many(self, good_ids: list[int]) -> list[Good]:
+        stmt = select(Good).where(Good.id.in_(good_ids))
+        result = await self._session.execute(stmt)
+        return list(result.scalars().all())

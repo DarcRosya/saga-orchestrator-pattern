@@ -1,3 +1,5 @@
+import asyncio
+
 import structlog
 from arq import ArqRedis
 from fastapi import HTTPException, status
@@ -23,44 +25,56 @@ class OrderService:
         return await self._order_repo.get(order_id)
 
     async def create(self, redis: ArqRedis, data: OrderCreate, optional_user: User | None) -> Order:
-        good = await self._good_repo.get(data.good_id)
-        if good is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Good not found.")
+        result = await self.create_bulk(redis, [data], optional_user)
+        return result[0]
 
-        shipping_data = data.order_details.model_dump()
-        # mode="json" serializes uuid.UUID → str, which matches Mapped[str255]
-        order_data = data.model_dump(exclude={"order_details"}, mode="json")
+    async def create_bulk(
+        self, redis: ArqRedis, data_list: list[OrderCreate], optional_user: User | None
+    ) -> list[Order]:
+        good_ids = {d.good_id for d in data_list}
+        goods = await self._good_repo.get_many(list(good_ids))
+        good_map = {g.id: g for g in goods}
 
-        shipping_detail = OrderShippingDetail(**shipping_data)
+        missing_goods = good_ids - set(good_map.keys())
+        if missing_goods:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Goods not found: {missing_goods}"
+            )
 
-        new_order = Order(
-            **order_data,
-            buyer_id=optional_user.id if optional_user else None,
-            shipping_detail=shipping_detail,
-        )
+        new_orders: list[Order] = []
+        for data in data_list:
+            shipping_data = data.order_details.model_dump()
+            order_data = data.model_dump(exclude={"order_details"}, mode="json")
 
-        saved_order = await self._order_repo.create(new_order)
-        # Capture id before commit — SQLAlchemy expires all attributes after
-        # commit, and accessing them lazily in an async context raises an error.
-        order_id = saved_order.id
+            shipping_detail = OrderShippingDetail(**shipping_data)
+            new_order = Order(
+                **order_data,
+                buyer_id=optional_user.id if optional_user else None,
+                shipping_detail=shipping_detail,
+            )
+            new_orders.append(new_order)
 
-        logger.info(
-            "order.created",
-            order_id=str(order_id),
-            good_id=str(data.good_id),
-            user_id=str(optional_user.id) if optional_user else None,
-        )
-
-        # Commit first — only enqueue after the order is persisted.
-        # If enqueue fails, the order is still safe in the DB and can be
-        # recovered by the scheduler's stuck-order compensation logic.
+        saved_orders: list[Order] = await self._order_repo.create_bulk(new_orders)
         await self._session.commit()
 
-        await redis.enqueue_job("process_billing", order_id, _job_id=f"billing_{order_id}")
-        logger.info(
-            "order.job.enqueued",
-            job="process_billing",
-            order_id=str(order_id),
-        )
+        redis_tasks = [
+            redis.enqueue_job("process_billing", str(order.id), _job_id=f"billing_{order.id}")
+            for order in saved_orders
+        ]
+        await asyncio.gather(*redis_tasks)
 
-        return saved_order
+        for order in saved_orders:
+            logger.info(
+                "order.created",
+                order_id=str(order.id),
+                good_id=str(order.good_id),
+                user_id=str(optional_user.id) if optional_user else None,
+            )
+            logger.info(
+                "order.job.enqueued",
+                category="bulk",
+                job="process_billing",
+                order_id=str(order.id),
+            )
+
+        return saved_orders

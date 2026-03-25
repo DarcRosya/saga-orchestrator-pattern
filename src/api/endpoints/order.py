@@ -10,19 +10,27 @@ from src.services.order import OrderService
 router = APIRouter(prefix="/order", tags=["Order"])
 
 
-@router.post("/", response_model=OrderResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/",
+    response_model=OrderResponse | list[OrderResponse],
+    status_code=status.HTTP_201_CREATED,
+)
 async def create(
-    order_details: OrderCreate,
+    order_details: OrderCreate | list[OrderCreate],
     db: DBSession,
     redis: RedisClient,
     optional_current_user: OptionalCurrentUser,
     response: Response,
-) -> Order:
+) -> Order | list[Order]:
     service = OrderService(db)
     try:
-        return await service.create(
-            redis=redis, data=order_details, optional_user=optional_current_user
+        is_single = isinstance(order_details, OrderCreate)
+        data_list = [order_details] if is_single else order_details
+
+        result = await service.create_bulk(
+            redis=redis, data_list=data_list, optional_user=optional_current_user
         )
+        return result[0] if is_single else result
     except DuplicateOrderError as exc:
         response.status_code = status.HTTP_200_OK
         return exc.existing_order

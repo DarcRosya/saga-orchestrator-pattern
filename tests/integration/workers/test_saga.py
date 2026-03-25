@@ -59,6 +59,9 @@ async def test_saga_happy_path(
             process_logistic(ctx, order_id),
         )
 
+        # Wait for potential async commits to finish inside workers
+        await asyncio.sleep(0.1)
+
     db_session.expire_all()
 
     updated_order = await order_service.get(str(order_id))
@@ -241,6 +244,9 @@ async def test_saga_postpayment_path(
             process_inventory(ctx, order_id),
             process_logistic(ctx, order_id),
         )
+
+        # Wait for potential async commits to finish inside workers
+        await asyncio.sleep(0.1)
 
     db_session.expire_all()
     updated_order = await order_service.get(str(order_id))

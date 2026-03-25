@@ -62,3 +62,23 @@ class OrderRepository:
             await self._session.rollback()
             existing = await self.get_existing_by_idempotency_key(idempotency_key)
             raise DuplicateOrderError(existing) from None
+
+    async def get_existing_by_idempotency_keys(self, keys: list[str]) -> list[Order]:
+        stmt = select(Order).where(Order.idempotency_key.in_(keys))
+        result = await self._session.execute(stmt)
+        return list(result.scalars().all())
+
+    async def create_bulk(self, orders: list[Order]) -> list[Order]:
+        keys = [str(o.idempotency_key) for o in orders]
+        self._session.add_all(orders)
+        try:
+            await self._session.flush()
+            for order in orders:
+                await self._session.refresh(order)
+            return orders
+        except IntegrityError:
+            await self._session.rollback()
+            existing = await self.get_existing_by_idempotency_keys(keys)
+            if existing:
+                raise DuplicateOrderError(existing[0]) from None
+            raise
