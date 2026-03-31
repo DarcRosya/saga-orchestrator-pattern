@@ -73,3 +73,14 @@ The SAGA sequence is coordinated through distributed queues using ARQ connecting
 - It reads the DB and checks the `SagaStepStatus` of each participant (`billing_status`, `inventory_status`, `logistics_status`). 
 - If any service is still `PENDING`, the task raises an exception, forcing ARQ to wait and retry until parallel flights finish.
 - If a step was effectively `SUCCESS`, it dynamically enqueues an HTTP request to its respective rollback endpoint (e.g. `/refund` for billing, `/release` for inventory, `/cancel` for logistics). These rollback actions are fired simultaneously via `asyncio.gather`.
+## Scheduler & Stuck Orders (`scheduler.py`)
+
+In distributed systems, transactions can sometimes get "stuck" in a processing or compensating state due to unexpected crashes, networking outages, or unrecoverable external failures. To guarantee eventual consistency, a dedicated **Scheduler Worker** is employed using ARQ's `cron` feature.
+
+**Periodic Polling**:
+- The scheduler runs on a dedicated Redis queue (`saga:scheduler`) to prevent interference with the high-throughput task queue.
+- It periodically queries the database for orders stuck in `PROCESSING` or `COMPENSATING` beyond a defined timeout.
+
+**Automated Recovery & Alerts**:
+- Orders stuck in `PROCESSING` are automatically dispatched to the `compensation` task to forcefully roll them back.
+- Orders globally stuck in a `COMPENSATING` state point to a critical rollback failure. These are transitioned to a `MANUAL_INTERVENTION_REQUIRED` state and trigger webhook alerts to external notification services.

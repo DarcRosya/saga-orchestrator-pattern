@@ -21,7 +21,7 @@ It provides a high-performance REST API to receive requests, utilizing a central
 *   **Parallel Execution**: Concurrently contacts multiple subdomains (e.g., Inventory and Logistics) using `asyncio.gather` to optimize latency once dependent steps succeed.
 *   **Smart Failure Compensation**: Auto-detects exactly which sub-transactions succeeded and exclusively runs localized reverse/rollback actions (`/refund`, `/release`, `/cancel`).
 *   **Observability**: Integrated Prometheus instrumentation for application metrics.
-*   **Alerts**: [TODO].
+*   **Alerts**: Critical failures (e.g., dead orders needing manual intervention) trigger webhook alerts to external notification services.
 
 ## Architecture
 

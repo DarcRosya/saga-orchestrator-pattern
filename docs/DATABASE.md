@@ -12,7 +12,7 @@ The central entity for the SAGA orchestration.
 - **Foreign Keys**: `buyer_id` (Users), `good_id` (Goods).
 - **Fields of note**:
   - `idempotency_key` (Unique String): Prevents duplicate orders.
-  - `global_status` (Enum: PROCESSING, COMPENSATING, SUCCESS, CANCELLED).
+  - `global_status` (Enum: PROCESSING, COMPLETED, CANCELLED, COMPENSATING, MANUAL_INTERVENTION_REQUIRED).
   - Component sync statuses: `billing_status`, `inventory_status`, `logistics_status` (Enum: PENDING, SUCCESS, FAILED, COMPENSATED, SKIPPED, CANCELLED).
 - **Relationships**: 1-to-1 with `order_shipping_details`, 1-to-many with `saga_logs`.
 
