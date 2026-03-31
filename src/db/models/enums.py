@@ -15,6 +15,7 @@ class OrderGlobalStatus(str, enum.Enum):
     COMPLETED = "COMPLETED"
     CANCELLED = "CANCELLED"
     COMPENSATING = "COMPENSATING"
+    MANUAL_INTERVENTION_REQUIRED = "MANUAL_INTERVENTION_REQUIRED"
 
 
 class UserPrivileges(str, enum.Enum):

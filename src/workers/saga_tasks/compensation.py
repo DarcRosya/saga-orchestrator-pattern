@@ -9,6 +9,7 @@ from sqlalchemy import select
 
 from src.db.models.enums import OrderGlobalStatus, SagaStepStatus
 from src.db.models.order import Order
+from src.services.notifications import send_critical_alert
 
 logger = structlog.get_logger("saga.compensation")
 
@@ -91,7 +92,25 @@ async def compensation(ctx: dict[str, Any], order_id: uuid.UUID) -> None:
         if SagaStepStatus.SUCCESS not in statuses:
             order.global_status = OrderGlobalStatus.CANCELLED
             logger.info("compensation.finished.success", order_id=str(order_id))
+            await session.commit()
         else:
-            logger.warning("compensation.finished.partial", order_id=str(order_id))
+            job_try = ctx.get("job_try", 1)
 
-        await session.commit()
+            if job_try >= 5:
+                logger.error("compensation.exhausted_retries", order_id=str(order_id))
+                order.global_status = OrderGlobalStatus.MANUAL_INTERVENTION_REQUIRED
+
+                await send_critical_alert(
+                    order_id=str(order_id),
+                    reason="Order stuck in COMPENSATING. Manual refund required.",
+                    context={
+                        "billing_status": order.billing_status.value,
+                        "inventory_status": order.inventory_status.value,
+                        "logistics_status": order.logistics_status.value,
+                    },
+                )
+                await session.commit()
+            else:
+                logger.warning("compensation.finished.partial", order_id=str(order_id))
+                await session.commit()
+                raise Exception(f"Partial failure on try {job_try}. Forcing ARQ to retry.")

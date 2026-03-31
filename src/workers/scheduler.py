@@ -1,16 +1,48 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import structlog
 from arq import cron
+from sqlalchemy import select
 
 from src.core.settings import settings
+from src.db.models.enums import OrderGlobalStatus
+from src.db.models.order import Order
 from src.db.repositories.order import OrderRepository
+from src.services.notifications import send_critical_alert
 from workers.lifecycle import shutdown, startup
 
 logger = structlog.get_logger("saga.scheduler")
 
 DEFAULT_STUCK_TIMEOUT_SECONDS = 60
+
+
+async def check_and_alert_dead_orders(ctx: dict[str, Any]) -> None:
+    session_factory = ctx["session_factory"]
+
+    threshold = datetime.now(UTC).replace(tzinfo=None) - timedelta(hours=1)
+
+    async with session_factory() as session:
+        stmt = select(Order).where(
+            Order.global_status == OrderGlobalStatus.COMPENSATING, Order.updated_at < threshold
+        )
+        result = await session.execute(stmt)
+    dead_orders = result.scalars().all()
+
+    for order in dead_orders:
+        await send_critical_alert(
+            order_id=str(order.id),
+            reason="Order stuck in COMPENSATING for over 1 hour. Manual refund required.",
+            context={
+                "billing_status": order.billing_status.value,
+                "inventory_status": order.inventory_status.value,
+                "logistics_status": order.logistics_status.value,
+            },
+        )
+
+        order.global_status = OrderGlobalStatus.MANUAL_INTERVENTION_REQUIRED
+
+        await session.commit()
 
 
 async def poll_and_dispatch_orders(ctx: dict[str, Any]) -> None:
@@ -67,7 +99,7 @@ async def poll_and_dispatch_orders(ctx: dict[str, Any]) -> None:
 class SchedulerWorkerSettings:
     redis_settings = settings.redis.arq_settings
 
-    functions = [poll_and_dispatch_orders]
+    functions = [check_and_alert_dead_orders, poll_and_dispatch_orders]
 
     cron_jobs = [
         cron(

@@ -54,6 +54,12 @@ class AuthSettings(BaseModel):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
 
+class SlackSettings(BaseModel):
+    """Slack configuration."""
+
+    WEBHOOK_URL: str = "https://hooks.slack.com/services/bla-bla"
+
+
 class Settings(BaseSettings):
     """
     The main class aggregator, which is the sole source of configuration for the entire application.
@@ -73,6 +79,7 @@ class Settings(BaseSettings):
     db: DatabaseSettings
     redis: RedisSettings
     auth: AuthSettings
+    slack: SlackSettings
 
 
 settings = Settings()  # type: ignore[call-arg]
