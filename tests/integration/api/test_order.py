@@ -55,7 +55,10 @@ async def test_create_order_success(
 
     # Verify Redis enqueue
     mock_redis.enqueue_job.assert_called_once_with(
-        "process_billing", str(order.id), _job_id=f"billing_{order.id}"
+        "process_billing",
+        str(order.id),
+        _job_id=f"billing_{order.id}",
+        _queue_name="saga:tasks",
     )
 
 

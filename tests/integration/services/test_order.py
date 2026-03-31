@@ -45,11 +45,11 @@ async def test_order_service_create(db_session: AsyncSession):
     assert order.idempotency_key == str(order_data.idempotency_key)
 
     mock_redis.enqueue_job.assert_called_once_with(
-        "process_billing", str(order.id), _job_id=f"billing_{order.id}"
+        "process_billing",
+        str(order.id),
+        _job_id=f"billing_{order.id}",
+        _queue_name="saga:tasks",
     )
-
-
-@pytest.mark.asyncio
 async def test_order_service_create_invalid_good(db_session: AsyncSession):
     service = OrderService(db_session)
     mock_redis = AsyncMock()

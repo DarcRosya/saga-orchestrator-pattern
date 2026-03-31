@@ -58,7 +58,12 @@ class OrderService:
         await self._session.commit()
 
         redis_tasks = [
-            redis.enqueue_job("process_billing", str(order.id), _job_id=f"billing_{order.id}")
+            redis.enqueue_job(
+                "process_billing",
+                str(order.id),
+                _job_id=f"billing_{order.id}",
+                _queue_name="saga:tasks",
+            )
             for order in saved_orders
         ]
         await asyncio.gather(*redis_tasks)

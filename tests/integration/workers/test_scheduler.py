@@ -56,8 +56,8 @@ async def test_scheduler_enqueues_stuck_orders(
         "compensation",
         stuck_order.id,
         _job_id=f"compensation:{stuck_order.id}",
+        _queue_name="saga:tasks",
     )
-
     # Verify the stuck order's updated_at timestamp got modified to prevent rapid looping
     await db_session.refresh(stuck_order)
     assert stuck_order.updated_at > original_updated_at

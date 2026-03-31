@@ -70,6 +70,7 @@ async def poll_and_dispatch_orders(ctx: dict[str, Any]) -> None:
                         "compensation",
                         order.id,
                         _job_id=f"compensation:{order.id}",
+                        _queue_name="saga:tasks",
                     )
                     order.updated_at = datetime.now(UTC).replace(tzinfo=None)
                     logger.info(
@@ -98,13 +99,14 @@ async def poll_and_dispatch_orders(ctx: dict[str, Any]) -> None:
 
 class SchedulerWorkerSettings:
     redis_settings = settings.redis.arq_settings
+    queue_name = "saga:scheduler"
 
     functions = [check_and_alert_dead_orders, poll_and_dispatch_orders]
 
     cron_jobs = [
         cron(
             poll_and_dispatch_orders,
-            second={0, 10, 20, 30, 40, 50},  # every 10 seconds
+            second={0, 30},
             unique=True,
         )
     ]
@@ -112,5 +114,4 @@ class SchedulerWorkerSettings:
     on_startup = startup
     on_shutdown = shutdown
 
-    max_jobs = 15
-    job_timeout = 15
+    max_jobs = 2

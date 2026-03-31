@@ -8,6 +8,7 @@ from workers.saga_tasks.logistics import process_logistic
 
 class SagaWorkerSettings:
     redis_settings = settings.redis.arq_settings
+    queue_name = "saga:tasks"
 
     functions = [compensation, process_billing, process_inventory, process_logistic]
 
@@ -15,3 +16,4 @@ class SagaWorkerSettings:
     on_shutdown = shutdown
 
     max_jobs = 15
+    job_timeout = 60

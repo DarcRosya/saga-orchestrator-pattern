@@ -69,9 +69,17 @@ async def process_billing(ctx: dict[str, Any], order_id: uuid.UUID) -> None:
                 log.info("Billing successful or skipped, proceeding to next steps")
                 await asyncio.gather(
                     redis.enqueue_job(
-                        "process_inventory", order_id, _job_id=f"inventory_{order_id}"
+                        "process_inventory",
+                        order_id,
+                        _job_id=f"inventory_{order_id}",
+                        _queue_name="saga:tasks",
                     ),
-                    redis.enqueue_job("process_logistic", order_id, _job_id=f"logistic_{order_id}"),
+                    redis.enqueue_job(
+                        "process_logistic",
+                        order_id,
+                        _job_id=f"logistic_{order_id}",
+                        _queue_name="saga:tasks",
+                    ),
                 )
             else:
                 log.info("Billing failed, running compensation")
@@ -79,7 +87,10 @@ async def process_billing(ctx: dict[str, Any], order_id: uuid.UUID) -> None:
                 order.logistics_status = SagaStepStatus.CANCELLED
                 order.global_status = OrderGlobalStatus.COMPENSATING
                 await redis.enqueue_job(
-                    "compensation", order_id, _job_id=f"compensation:{order_id}"
+                    "compensation",
+                    order_id,
+                    _job_id=f"compensation:{order_id}",
+                    _queue_name="saga:tasks",
                 )
 
             await session.commit()
@@ -90,5 +101,10 @@ async def process_billing(ctx: dict[str, Any], order_id: uuid.UUID) -> None:
             "Critical infrastructural error in process_billing (DB or Redis failure)", exc_info=True
         )
         with contextlib.suppress(Exception):
-            await redis.enqueue_job("compensation", order_id, _job_id=f"compensation:{order_id}")
+            await redis.enqueue_job(
+                "compensation",
+                order_id,
+                _job_id=f"compensation:{order_id}",
+                _queue_name="saga:tasks",
+            )
         raise e

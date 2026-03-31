@@ -61,7 +61,10 @@ async def process_logistic(ctx: dict[str, Any], order_id: uuid.UUID) -> None:
                 log.info("Logistic check failed, triggering compensation")
                 order.global_status = OrderGlobalStatus.COMPENSATING
                 await redis.enqueue_job(
-                    "compensation", order_id, _job_id=f"compensation:{order_id}"
+                    "compensation",
+                    order_id,
+                    _job_id=f"compensation:{order_id}",
+                    _queue_name="saga:tasks",
                 )
 
             await session.commit()
@@ -70,5 +73,10 @@ async def process_logistic(ctx: dict[str, Any], order_id: uuid.UUID) -> None:
     except Exception as e:
         log.error("Critical infrastructural error in process_logistic", exc_info=True)
         with contextlib.suppress(Exception):
-            await redis.enqueue_job("compensation", order_id, _job_id=f"compensation:{order_id}")
+            await redis.enqueue_job(
+                "compensation",
+                order_id,
+                _job_id=f"compensation:{order_id}",
+                _queue_name="saga:tasks",
+            )
         raise e

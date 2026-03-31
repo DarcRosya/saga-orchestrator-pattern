@@ -57,13 +57,16 @@ async def process_inventory(ctx: dict[str, Any], order_id: uuid.UUID) -> None:
                     SagaStepStatus.SUCCESS,
                     SagaStepStatus.SKIPPED,
                 ):
-                    order.status = OrderGlobalStatus.COMPLETED
+                    order.global_status = OrderGlobalStatus.COMPLETED
                     log.info("All saga steps completed. Order marked as COMPLETED.")
             else:
                 log.info("Inventory check failed, triggering compensation")
                 order.global_status = OrderGlobalStatus.COMPENSATING
                 await redis.enqueue_job(
-                    "compensation", order_id, _job_id=f"compensation:{order_id}"
+                    "compensation",
+                    order_id,
+                    _job_id=f"compensation:{order_id}",
+                    _queue_name="saga:tasks",
                 )
 
             await session.commit()
@@ -72,5 +75,10 @@ async def process_inventory(ctx: dict[str, Any], order_id: uuid.UUID) -> None:
     except Exception as e:
         log.error("Critical infrastructural error in process_inventory", exc_info=True)
         with contextlib.suppress(Exception):
-            await redis.enqueue_job("compensation", order_id, _job_id=f"compensation:{order_id}")
+            await redis.enqueue_job(
+                "compensation",
+                order_id,
+                _job_id=f"compensation:{order_id}",
+                _queue_name="saga:tasks",
+            )
         raise e

@@ -69,6 +69,7 @@ services:
       - .env
     environment:
       DB__HOST: database
+      DB__PORT: 5432
       REDIS__R_HOST: redis
     depends_on:
       database:
@@ -96,6 +97,7 @@ services:
       - .env
     environment:
       DB__HOST: database
+      DB__PORT: 5432
       REDIS__R_HOST: redis
     depends_on:
       database:
@@ -123,6 +125,7 @@ services:
       - .env
     environment:
       DB__HOST: database
+      DB__PORT: 5432
       REDIS__R_HOST: redis
     depends_on:
       database:
