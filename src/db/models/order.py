@@ -18,7 +18,6 @@ from src.db.models.types import (
 if TYPE_CHECKING:
     from src.db.models.good import Good
     from src.db.models.order_shipping_detail import OrderShippingDetail
-    from src.db.models.saga_log import SagaLog
     from src.db.models.user import User
 
 
@@ -49,7 +48,4 @@ class Order(Base):
     good: Mapped[Good] = relationship(back_populates="orders")
     shipping_detail: Mapped[OrderShippingDetail | None] = relationship(
         back_populates="order", uselist=False
-    )
-    saga_logs: Mapped[list[SagaLog]] = relationship(
-        back_populates="order", order_by="SagaLog.created_at"
     )

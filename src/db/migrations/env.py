@@ -18,7 +18,6 @@ from src.db.models import (  # noqa: E402
     Order,  # type: ignore # noqa: F401
     OrderShippingDetail,  # type: ignore # noqa: F401
     RefreshToken,  # type: ignore # noqa: F401
-    SagaLog,  # type: ignore # noqa: F401
     User,  # type: ignore # noqa: F401
 )
 

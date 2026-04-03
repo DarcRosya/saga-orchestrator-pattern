@@ -11,7 +11,6 @@ from src.db.models.good import Good
 from src.db.models.order import Order
 from src.db.models.order_shipping_detail import OrderShippingDetail
 from src.db.models.refresh_token import RefreshToken
-from src.db.models.saga_log import SagaLog
 from src.db.models.types import (
     bigintpk,
     created_at_col,
@@ -40,7 +39,6 @@ __all__ = [
     "Good",
     "Order",
     "OrderShippingDetail",
-    "SagaLog",
     "RefreshToken",
     # type aliases (re-exported for convenience)
     "intpk",

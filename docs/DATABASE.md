@@ -14,18 +14,12 @@ The central entity for the SAGA orchestration.
   - `idempotency_key` (Unique String): Prevents duplicate orders.
   - `global_status` (Enum: PROCESSING, COMPLETED, CANCELLED, COMPENSATING, MANUAL_INTERVENTION_REQUIRED).
   - Component sync statuses: `billing_status`, `inventory_status`, `logistics_status` (Enum: PENDING, SUCCESS, FAILED, COMPENSATED, SKIPPED, CANCELLED).
-- **Relationships**: 1-to-1 with `order_shipping_details`, 1-to-many with `saga_logs`.
+- **Relationships**: 1-to-1 with `order_shipping_details`.
 
 ### 2. `order_shipping_details` (Source: `src/db/models/order_shipping_detail.py`)
 Stores PII (Personally Identifiable Information) and delivery context for the order.
 - **Primary/Foreign Key**: `order_id` (UUID). This enforces a strict 1-to-1 relationship at the database level.
 - **Fields**: `guest_email`, `guest_phone`, `region`, `city`, `delivery_service`, `postal_address`.
-
-### 3. `saga_logs` (Source: `src/db/models/saga_log.py`)
-Audit trail for transitions in the Saga workflow.
-- **Primary Key**: `id` (UUID).
-- **Foreign Key**: `order_id` -> `orders.id`.
-- **Fields**: `action`, `status`, `error_details` (for capturing stack traces or external API errors). 
 
 ---
 
@@ -36,7 +30,6 @@ erDiagram
     USERS ||--o{ ORDERS : places
     GOODS ||--o{ ORDERS : contains
     ORDERS ||--|| ORDER_SHIPPING_DETAILS : has
-    ORDERS ||--o{ SAGA_LOGS : tracks_steps
 
     ORDERS {
         uuid id PK
@@ -55,14 +48,6 @@ erDiagram
         string guest_phone
         string region
         string delivery_service
-    }
-
-    SAGA_LOGS {
-        uuid id PK
-        uuid order_id FK
-        string action
-        string status
-        text error_details
     }
 ```
 
