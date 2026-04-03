@@ -69,7 +69,7 @@ async def poll_and_dispatch_orders(ctx: dict[str, Any]) -> None:
                     await redis.enqueue_job(
                         "compensation",
                         order.id,
-                        _job_id=f"compensation:{order.id}",
+                        _job_id=f"compensation:{order.id}:{int(datetime.now(UTC).timestamp())}",
                         _queue_name="saga:tasks",
                     )
                     order.updated_at = datetime.now(UTC).replace(tzinfo=None)
@@ -104,11 +104,18 @@ class SchedulerWorkerSettings:
     functions = [check_and_alert_dead_orders, poll_and_dispatch_orders]
 
     cron_jobs = [
+        # every 30 seconds
         cron(
             poll_and_dispatch_orders,
             second={0, 30},
             unique=True,
-        )
+        ),
+        # every 10 minutes
+        cron(
+            check_and_alert_dead_orders,
+            minute={0, 10, 20, 30, 40, 50},
+            unique=True,
+        ),
     ]
 
     on_startup = startup

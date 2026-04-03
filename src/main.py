@@ -10,6 +10,7 @@ from prometheus_fastapi_instrumentator import Instrumentator
 from src.api.endpoints import include_routers  # type: ignore
 from src.api.middleware import LoggingMiddleware
 from src.core.logging import setup_logging
+from src.core.seed import seed_goods
 from src.core.settings import settings
 
 setup_logging()
@@ -33,6 +34,8 @@ async def lifespan(app: FastAPI):
             port=settings.redis.R_PORT,
         )
     )
+
+    await seed_goods()
 
     yield  # App is running
 

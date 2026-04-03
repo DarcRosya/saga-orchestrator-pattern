@@ -64,11 +64,15 @@ async def compensation(ctx: dict[str, Any], order_id: uuid.UUID) -> None:
             return service, False
 
     if billing_refund:
-        tasks.append(invoke_refund("billing", f"http://mock_env/billing/{order_id}/refund"))
+        tasks.append(invoke_refund("billing", f"http://mock-env:8080/billing/{order_id}/refund"))
     if inventory_release:
-        tasks.append(invoke_refund("inventory", f"http://mock_env/inventory/{order_id}/release"))
+        tasks.append(
+            invoke_refund("inventory", f"http://mock-env:8080/inventory/{order_id}/release")
+        )
     if logistics_cancel:
-        tasks.append(invoke_refund("logistics", f"http://mock_env/logistics/{order_id}/cancel"))
+        tasks.append(
+            invoke_refund("logistics", f"http://mock-env:8080/logistics/{order_id}/cancel")
+        )
 
     results: dict[str, bool] = {}
     if tasks:

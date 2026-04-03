@@ -23,7 +23,7 @@ async def process_logistic(ctx: dict[str, Any], order_id: uuid.UUID) -> None:
         log.info("Sending logistic check request")
         logistics_status = SagaStepStatus.FAILED
         try:
-            response = await http_client.post(f"http://mock_env/logistic/{order_id}")
+            response = await http_client.post(f"http://mock-env:8080/logistics/{order_id}")
             if response.status_code == 200:
                 logistics_status = SagaStepStatus.SUCCESS
             else:

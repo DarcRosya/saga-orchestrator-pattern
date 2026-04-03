@@ -9,6 +9,8 @@ services:
       - POSTGRES_DB=${DB__NAME}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    ports:
+      - 5433:5432
     deploy:
       resources:
         limits:
@@ -158,9 +160,9 @@ services:
         reservations:
           memory: 16M
 
-  mock-services:
+  mock-env:
     build: ./mock_env
-    container_name: saga_mock_services
+    container_name: saga_mock_env
     restart: unless-stopped
     ports:
       - "8080:8080"

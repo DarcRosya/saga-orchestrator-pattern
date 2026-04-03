@@ -23,7 +23,7 @@ async def process_inventory(ctx: dict[str, Any], order_id: uuid.UUID) -> None:
         log.info("Sending inventory check request")
         inventory_status = SagaStepStatus.FAILED
         try:
-            response = await http_client.post(f"http://mock_env/inventory/{order_id}")
+            response = await http_client.post(f"http://mock-env:8080/inventory/{order_id}")
             if response.status_code == 200:
                 inventory_status = SagaStepStatus.SUCCESS
             else:

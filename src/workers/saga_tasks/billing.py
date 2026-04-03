@@ -43,7 +43,7 @@ async def process_billing(ctx: dict[str, Any], order_id: uuid.UUID) -> None:
             log.info("Sending billing request")
             billing_status = SagaStepStatus.FAILED
             try:
-                response = await http_client.post(f"http://mock_env/billing/{order_id}")
+                response = await http_client.post(f"http://mock-env:8080/billing/{order_id}")
                 if response.status_code == 200:
                     billing_success = True
                     billing_status = SagaStepStatus.SUCCESS
