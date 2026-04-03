@@ -38,6 +38,8 @@ This will spin up:
 6. `nginx` (Reverse proxy on port 80)
 7. `mock-services` (Port 8080)
 
+*Note: During the FastAPI application startup (`api` service), an automated seeding process runs (`src/core/seed.py`), which populates the database with initial records (like `goods`), so you don't have to create them manually to start testing orders. It handles duplicates securely by skipping population if the table is not empty.*
+
 ### Running Tests
 
 A separate `docker-compose.test.yml` is provided for running integration and unit tests using an isolated `test-database` running entirely in `tmpfs` (RAM) for speed.

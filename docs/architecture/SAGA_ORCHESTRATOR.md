@@ -82,5 +82,5 @@ In distributed systems, transactions can sometimes get "stuck" in a processing o
 - It periodically queries the database for orders stuck in `PROCESSING` or `COMPENSATING` beyond a defined timeout.
 
 **Automated Recovery & Alerts**:
-- Orders stuck in `PROCESSING` are automatically dispatched to the `compensation` task to forcefully roll them back.
+- Orders stuck in `PROCESSING` are automatically dispatched to the `compensation` task to forcefully roll them back. To bypass ARQ's built-in job result caching and ensure the compensation job is successfully re-enqueued (even if previous attempts failed and their results were cached), the scheduler appends a unique timestamp to the `_job_id`.
 - Orders globally stuck in a `COMPENSATING` state point to a critical rollback failure. These are transitioned to a `MANUAL_INTERVENTION_REQUIRED` state and trigger webhook alerts to external notification services.

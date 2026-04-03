@@ -76,3 +76,11 @@ When running in docker (via `docker-compose.yml`), a dedicated `migrator` servic
 - **Generate new migration**: `alembic revision --autogenerate -m "description"`
 - **Apply migrations**: `alembic upgrade head`
 - **Rollback 1 step**: `alembic downgrade -1`
+
+## Database Seeding
+
+To simplify local development and testing, the application automatically seeds the database with initial data (like available goods) when the API server starts. 
+
+This is handled inside the application's `lifespan` context manager in `src/main.py`, which calls the seeding script `src/core/seed.py`.
+
+The seeding mechanism ensures that it only inserts data if the `goods` table is currently empty, preventing duplicate entries across multiple container restarts.
