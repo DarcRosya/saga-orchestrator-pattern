@@ -37,8 +37,17 @@ This will spin up:
 5. `scheduler-worker` & `saga-worker` (ARQ background tasks)
 6. `nginx` (Reverse proxy on port 80)
 7. `mock-services` (Port 8080)
+8. `redisinsight` (Redis GUI on port 5540)
 
 *Note: During the FastAPI application startup (`api` service), an automated seeding process runs (`src/core/seed.py`), which populates the database with initial records (like `goods`), so you don't have to create them manually to start testing orders. It handles duplicates securely by skipping population if the table is not empty.*
+
+### Admins Monitoring (RedisInsight)
+
+RedisInsight is deployed with the main environment and allows an admin to visually inspect Redis databases. This is used for monitoring ARQ queues, troubleshooting stuck sagas, and managing background tasks.
+
+1. Open your browser and navigate to `http://localhost:5540`
+2. Follow the initialization steps and Add a Redis Database.
+3. Configure the connection using the host `redis` and default port `6379`.
 
 ### Running Tests
 

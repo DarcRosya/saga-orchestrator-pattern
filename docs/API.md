@@ -198,3 +198,33 @@ JSON object or an array of objects for bulk order creation with the following st
 *   **401 Unauthorized**: Missing or invalid token.
 
 ---
+
+## [PATCH] /admin/orders/{order_id}/force-cancel
+
+**Description:** Admin strictly forces an order to be cancelled if it requires manual intervention (`MANUAL_INTERVENTION_REQUIRED`).
+
+**Authorization:** Required (JWT Bearer Token with Admin role).
+
+**Query/Path Parameters:**
+| Name | Type | Required | Description |
+| ---- | ---- | -------- | ----------- |
+| **`order_id`** | uuid | Yes | The ID of the stuck order. |
+
+**Request Body:** None
+
+**Responses:**
+
+*   **200 OK**: Order was forcefully cancelled successfully.
+    ```json
+    {
+      "message": "Order <uuid> forcefully cancelled by admin <user_id>",
+      "order_id": "uuid",
+      "status": "CANCELLED"
+    }
+    ```
+*   **400 Bad Request**: Order is not in `MANUAL_INTERVENTION_REQUIRED` state.
+*   **401 Unauthorized**: Missing or invalid token.
+*   **403 Forbidden**: User token provided but without Administrator privileges.
+*   **404 Not Found**: Order with provided ID does not exist.
+
+---
