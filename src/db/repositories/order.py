@@ -18,6 +18,13 @@ class OrderRepository:
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 
+    async def update_global_status(self, order_id: str, status: OrderGlobalStatus) -> Order | None:
+        order = await self.get(order_id)
+        if order:
+            order.global_status = status
+            await self._session.flush()
+        return order
+
     async def get_stuck_orders_for_compensation(self, timeout_seconds: int = 60) -> list[Order]:
         """
         Searches for orders that are stuck in the "PROCESSING" stage,

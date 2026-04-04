@@ -5,6 +5,7 @@ from arq import ArqRedis
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.db.models.enums import OrderGlobalStatus
 from src.db.models.order import Order
 from src.db.models.order_shipping_detail import OrderShippingDetail
 from src.db.models.user import User
@@ -23,6 +24,11 @@ class OrderService:
 
     async def get(self, order_id: str) -> Order | None:
         return await self._order_repo.get(order_id)
+
+    async def update_global_status(self, order_id: str, status: OrderGlobalStatus) -> Order | None:
+        order = await self._order_repo.update_global_status(order_id, status)
+        await self._session.commit()
+        return order
 
     async def create(self, redis: ArqRedis, data: OrderCreate, optional_user: User | None) -> Order:
         result = await self.create_bulk(redis, [data], optional_user)

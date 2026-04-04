@@ -7,6 +7,7 @@ from jwt import InvalidTokenError
 
 from src.core.database import DBSession
 from src.db.models.user import User
+from src.db.repositories.user import UserRepository
 from src.schemas.auth import TokenUser
 from src.utils.jwt import TokenType, decode_token
 
@@ -42,7 +43,6 @@ async def _resolve_token(token: str) -> TokenUser:
 
 
 async def get_current_user(
-    session: DBSession,
     credentials: HTTPAuthorizationCredentials | None = Depends(_bearer),
 ) -> TokenUser:
     """Require a valid Bearer access token. Raises 401 if missing or invalid."""
@@ -65,11 +65,34 @@ async def get_optional_current_user(
     return await _resolve_token(credentials.credentials)
 
 
+async def verify_admin(
+    session: DBSession,
+    credentials: HTTPAuthorizationCredentials | None = Depends(_bearer),
+) -> User:
+    if not credentials:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    token_user = await _resolve_token(credentials.credentials)
+
+    user_repository = UserRepository(session=session)
+
+    user = await user_repository.get_by_id(user_id=token_user.id)
+    if not user or not await user_repository.check_id_admin_role(user_id=token_user.id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permission")
+
+    return user
+
+
 async def get_redis_pool(request: Request) -> ArqRedis:
     return request.app.state.redis_pool
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
 OptionalCurrentUser = Annotated[User | None, Depends(get_optional_current_user)]
+
+VerifiedAdmin = Annotated[User, Depends(verify_admin)]
 
 RedisClient = Annotated[ArqRedis, Depends(get_redis_pool)]
