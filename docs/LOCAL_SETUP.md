@@ -36,8 +36,13 @@ This will spin up:
 4. `api` (FastAPI backend on port 8000)
 5. `scheduler-worker` & `saga-worker` (ARQ background tasks)
 6. `nginx` (Reverse proxy on port 80)
-7. `mock-services` (Port 8080)
+7. `mock-env` (Port 8080)
 8. `redisinsight` (Redis GUI on port 5540)
+9. `redis-exporter` (Prometheus metrics for Redis)
+10. `postgres-exporter` (Prometheus metrics for PostgreSQL)
+11. `node-exporter` (Prometheus metrics for Linux host)
+12. `prometheus` (Metrics scraper + TSDB on port 9090)
+13. `grafana` (Dashboards on port 3000)
 
 *Note: During the FastAPI application startup (`api` service), an automated seeding process runs (`src/core/seed.py`), which populates the database with initial records (like `goods`), so you don't have to create them manually to start testing orders. It handles duplicates securely by skipping population if the table is not empty.*
 
@@ -48,6 +53,20 @@ RedisInsight is deployed with the main environment and allows an admin to visual
 1. Open your browser and navigate to `http://localhost:5540`
 2. Follow the initialization steps and Add a Redis Database.
 3. Configure the connection using the host `redis` and default port `6379`.
+
+### Monitoring Stack (Prometheus + Grafana)
+
+The compose setup now includes a complete metrics pipeline:
+
+1. Open `http://localhost:9090` to validate Prometheus targets.
+2. Open `http://localhost:3000` to access Grafana (`admin/admin` default credentials unless overridden in `.env`).
+3. Verify API metrics endpoint at `http://localhost/api/metrics`.
+
+Prometheus scrape jobs included by default:
+- FastAPI app (`api:8000/metrics`)
+- Redis (`redis-exporter:9121`)
+- PostgreSQL (`postgres-exporter:9187`)
+- Linux host (`node-exporter:9100`)
 
 ### Running Tests
 

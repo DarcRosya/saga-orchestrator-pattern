@@ -44,7 +44,7 @@ The container breakdown demonstrates the internal structure: the FastAPI API Gat
 | **Message Broker** | Redis 7 & ARQ | Task queue backend and message broker for the background workers. |
 | **ORM & Migrations** | SQLAlchemy 2.0 & Alembic | Asynchronous database interactions and schema versioning. |
 | **Reverse Proxy** | Nginx | Manages incoming HTTP routing natively in the Docker network. |
-| **Metrics** | TBA | TBA |
+| **Metrics** | Prometheus + Grafana + Exporters | Centralized metrics collection and dashboards for API, Redis, PostgreSQL, and host telemetry. |
 
 ## Quick Start
 
@@ -63,12 +63,22 @@ docker-compose up -d --build
 ### 3. Verify Health
 Once Docker indicates all containers are running, you can interact with the API:
 - **API Docs (Swagger UI)**: http://localhost/docs
-- **Mock Microservices (Billing, etc.)**: Runs internally on port 8080.
+- **API Metrics (Prometheus endpoint)**: http://localhost/api/metrics
+- **Prometheus UI**: http://localhost:9090
+- **Grafana UI**: http://localhost:3000 (`admin` / `admin` by default)
+- **Mock Microservices (Billing, etc.)**: Runs on port 8080.
 
 To check background worker logs:
 ```bash
 docker logs saga_worker -f
 ```
+
+### 4. Monitoring Targets Included
+Prometheus is preconfigured to scrape:
+- FastAPI application metrics (`/metrics`)
+- Redis metrics (via `redis_exporter`)
+- PostgreSQL metrics (via `postgres_exporter`)
+- Linux host metrics (via `node_exporter`)
 
 ---
 *For detailed API interactions and a visual of the exact SAGA state machine, check out [`docs/API.md`](docs/API.md) and [`docs/architecture/SAGA_ORCHESTRATOR.md`](docs/architecture/SAGA_ORCHESTRATOR.md).*
