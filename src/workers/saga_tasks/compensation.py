@@ -14,9 +14,10 @@ from src.services.notifications import send_critical_alert
 logger = structlog.get_logger("saga.compensation")
 
 
-async def compensation(ctx: dict[str, Any], order_id: uuid.UUID) -> None:
+async def compensation(ctx: dict[str, Any], order_id: uuid.UUID, retry_count: int = 0) -> None:
     session_factory = ctx["session_factory"]
     http_client = ctx["http_client"]
+    redis = ctx["redis"]
 
     logger.info("compensation.started", order_id=str(order_id))
 
@@ -35,8 +36,8 @@ async def compensation(ctx: dict[str, Any], order_id: uuid.UUID) -> None:
             or order.logistics_status == SagaStepStatus.PENDING
         ):
             await session.rollback()
-            logger.warning("compensation.tasks_pending", order_id=str(order_id))
-            raise Exception("Waiting for parallel tasks to finish")
+            logger.info("compensation.tasks_pending.defer", order_id=str(order_id))
+            return
 
         billing_refund = order.billing_status == SagaStepStatus.SUCCESS
         inventory_release = order.inventory_status == SagaStepStatus.SUCCESS
@@ -98,9 +99,7 @@ async def compensation(ctx: dict[str, Any], order_id: uuid.UUID) -> None:
             logger.info("compensation.finished.success", order_id=str(order_id))
             await session.commit()
         else:
-            job_try = ctx.get("job_try", 1)
-
-            if job_try >= 5:
+            if retry_count >= 4:
                 logger.error("compensation.exhausted_retries", order_id=str(order_id))
                 order.global_status = OrderGlobalStatus.MANUAL_INTERVENTION_REQUIRED
 
@@ -115,6 +114,18 @@ async def compensation(ctx: dict[str, Any], order_id: uuid.UUID) -> None:
                 )
                 await session.commit()
             else:
-                logger.warning("compensation.finished.partial", order_id=str(order_id))
+                next_retry = retry_count + 1
+                logger.warning(
+                    "compensation.finished.partial.defer",
+                    order_id=str(order_id),
+                    retry_count=next_retry,
+                )
                 await session.commit()
-                raise Exception(f"Partial failure on try {job_try}. Forcing ARQ to retry.")
+                await redis.enqueue_job(
+                    "compensation",
+                    order_id,
+                    next_retry,
+                    _job_id=f"compensation:{order_id}:{int(datetime.now(UTC).timestamp())}",
+                    _queue_name="saga:tasks",
+                    _defer_by=15,
+                )
