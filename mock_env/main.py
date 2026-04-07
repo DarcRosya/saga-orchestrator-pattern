@@ -7,9 +7,12 @@ from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import FastAPI, HTTPException, status
+from prometheus_fastapi_instrumentator import Instrumentator
 from pydantic import BaseModel
 
 app = FastAPI(title="Advanced Mock External Services for Saga Orchestration")
+
+Instrumentator().instrument(app).expose(app)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
