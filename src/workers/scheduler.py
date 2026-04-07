@@ -27,22 +27,25 @@ async def check_and_alert_dead_orders(ctx: dict[str, Any]) -> None:
             Order.global_status == OrderGlobalStatus.COMPENSATING, Order.updated_at < threshold
         )
         result = await session.execute(stmt)
-    dead_orders = result.scalars().all()
+        dead_orders = result.scalars().all()
 
-    for order in dead_orders:
-        await send_critical_alert(
-            order_id=str(order.id),
-            reason="Order stuck in COMPENSATING for over 1 hour. Manual refund required.",
-            context={
-                "billing_status": order.billing_status.value,
-                "inventory_status": order.inventory_status.value,
-                "logistics_status": order.logistics_status.value,
-            },
-        )
+        for order in dead_orders:
+            await send_critical_alert(
+                order_id=str(order.id),
+                reason="Order stuck in COMPENSATING for over 1 hour. Manual refund required.",
+                context={
+                    "billing_status": order.billing_status.value,
+                    "inventory_status": order.inventory_status.value,
+                    "logistics_status": order.logistics_status.value,
+                },
+            )
 
-        order.global_status = OrderGlobalStatus.MANUAL_INTERVENTION_REQUIRED
+            order.global_status = OrderGlobalStatus.MANUAL_INTERVENTION_REQUIRED
 
-        await session.commit()
+        if dead_orders:
+            await session.commit()
+
+    logger.info("scheduler.dead_orders.processed", count=len(dead_orders))
 
 
 async def poll_and_dispatch_orders(ctx: dict[str, Any]) -> None:
