@@ -166,7 +166,7 @@ def format_response(result: dict[str, Any]) -> ResponseModel:
 # --- BILLING ---
 @app.post("/billing/{order_id}", response_model=ResponseModel, tags=["mock_env"])
 async def process_billing(order_id: uuid.UUID):
-    result = await process_service_call("billing", order_id, "charge", success_rate=0.85)
+    result = await process_service_call("billing", order_id, "charge", success_rate=0.88)
     return format_response(result)
 
 
@@ -181,7 +181,7 @@ async def refund_billing(order_id: uuid.UUID):
 # --- INVENTORY ---
 @app.post("/inventory/{order_id}", response_model=ResponseModel, tags=["mock_env"])
 async def reserve_inventory(order_id: uuid.UUID):
-    result = await process_service_call("inventory", order_id, "reserve", success_rate=0.80)
+    result = await process_service_call("inventory", order_id, "reserve", success_rate=0.84)
     return format_response(result)
 
 
@@ -197,7 +197,7 @@ async def release_inventory(order_id: uuid.UUID):
 @app.post("/logistics/{order_id}", response_model=ResponseModel, tags=["mock_env"])
 async def arrange_logistics(order_id: uuid.UUID):
     # Logistics in a real-world environment is often the most unstable
-    result = await process_service_call("logistics", order_id, "arrange", success_rate=0.75)
+    result = await process_service_call("logistics", order_id, "arrange", success_rate=0.79)
     return format_response(result)
 
 
