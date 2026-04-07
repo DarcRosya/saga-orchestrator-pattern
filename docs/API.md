@@ -1,6 +1,6 @@
 # 1. API Documentation
 
-## [POST] /order/
+## [POST] /orders/
 
 **Description:** Creates one or multiple orders. When creating an order, a Saga Orchestrator is initialized in the background to handle the distributed transaction. Supports bulk creation by passing an array of order objects.
 

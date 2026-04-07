@@ -71,8 +71,9 @@ The SAGA sequence is coordinated through distributed queues using ARQ connecting
 **Smart Compensation Execution (`compensation.py`)**: 
 - The compensation function isn't a hardcoded cascade; it is strictly state-driven. 
 - It reads the DB and checks the `SagaStepStatus` of each participant (`billing_status`, `inventory_status`, `logistics_status`). 
-- If any service is still `PENDING`, the task raises an exception, forcing ARQ to wait and retry until parallel flights finish.
+- If any service is still `PENDING`, the task exits gracefully (no exception) and waits for the scheduler-driven re-dispatch cycle.
 - If a step was effectively `SUCCESS`, it dynamically enqueues an HTTP request to its respective rollback endpoint (e.g. `/refund` for billing, `/release` for inventory, `/cancel` for logistics). These rollback actions are fired simultaneously via `asyncio.gather`.
+- For partial compensation failures, the task performs a soft retry by manually re-enqueuing `compensation` with a short defer and an explicit `retry_count` argument, instead of failing the ARQ job with `raise`.
 ## Scheduler & Stuck Orders (`scheduler.py`)
 
 In distributed systems, transactions can sometimes get "stuck" in a processing or compensating state due to unexpected crashes, networking outages, or unrecoverable external failures. To guarantee eventual consistency, a dedicated **Scheduler Worker** is employed using ARQ's `cron` feature.
@@ -80,6 +81,9 @@ In distributed systems, transactions can sometimes get "stuck" in a processing o
 **Periodic Polling**:
 - The scheduler runs on a dedicated Redis queue (`saga:scheduler`) to prevent interference with the high-throughput task queue.
 - It periodically queries the database for orders stuck in `PROCESSING` or `COMPENSATING` beyond a defined timeout.
+- Cron schedule:
+  - `poll_and_dispatch_orders`: every 30 seconds (`second={0, 30}`).
+  - `check_and_alert_dead_orders`: every 10 minutes (`minute={0, 10, 20, 30, 40, 50}`).
 
 **Automated Recovery & Alerts**:
 - Orders stuck in `PROCESSING` are automatically dispatched to the `compensation` task to forcefully roll them back. To bypass ARQ's built-in job result caching and ensure the compensation job is successfully re-enqueued (even if previous attempts failed and their results were cached), the scheduler appends a unique timestamp to the `_job_id`.
