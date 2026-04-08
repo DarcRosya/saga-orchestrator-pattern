@@ -6,6 +6,7 @@ from arq import create_pool
 from arq.connections import RedisSettings
 from fastapi import FastAPI
 from prometheus_fastapi_instrumentator import Instrumentator
+from prometheus_fastapi_instrumentator.metrics import default as default_metrics
 
 from src.api.endpoints import include_routers  # type: ignore
 from src.api.middleware import LoggingMiddleware
@@ -57,7 +58,13 @@ app = FastAPI(
 )
 
 app.add_middleware(LoggingMiddleware)
-Instrumentator().instrument(app).expose(app)
+instrumentator = Instrumentator()
+instrumentator.add(
+    default_metrics(
+        latency_lowr_buckets=(0.1, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0),
+    )
+)
+instrumentator.instrument(app).expose(app)
 
 
 @app.get("/health", tags=["System"])
