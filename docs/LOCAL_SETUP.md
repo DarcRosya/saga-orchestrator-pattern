@@ -26,7 +26,7 @@ The project includes a comprehensive `docker-compose.yml` to spin up the entire 
 
 To build and start all containers:
 ```bash
-docker-compose up -d --build
+docker compose up -d --build
 ```
 
 This will spin up:
@@ -64,6 +64,8 @@ The compose setup now includes a complete metrics pipeline:
 
 Prometheus scrape jobs included by default:
 - FastAPI app (`api:8000/metrics`)
+- Saga worker (`saga-worker:9101/metrics`)
+- Scheduler worker (`scheduler-worker:9102/metrics`)
 - Redis (`redis-exporter:9121`)
 - PostgreSQL (`postgres-exporter:9187`)
 - Linux host (`node-exporter:9100`)
@@ -74,7 +76,7 @@ A separate `docker-compose.test.yml` is provided for running integration and uni
 
 To up test dependencies:
 ```bash
-docker-compose -f docker-compose.test.yml up -d
+docker compose -f docker-compose.test.yml up -d
 ```
 
 ## Mock Environment (`mock_env`)

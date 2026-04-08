@@ -203,6 +203,8 @@ JSON object or an array of objects for bulk order creation with the following st
 
 **Description:** Admin strictly forces an order to be cancelled if it requires manual intervention (`MANUAL_INTERVENTION_REQUIRED`).
 
+**Operational note:** After successful force-cancel, API enqueues a scheduler sync task to refresh the `saga_manual_intervention_required_current` gauge without waiting for the next cron tick.
+
 **Authorization:** Required (JWT Bearer Token with Admin role).
 
 **Query/Path Parameters:**

@@ -20,7 +20,7 @@ It provides a high-performance REST API to receive requests, utilizing a central
 *   **Asynchronous Queues (ARQ)**: High-performance background task processing natively backed by Redis to manage states off the main event loop.
 *   **Parallel Execution**: Concurrently contacts multiple subdomains (e.g., Inventory and Logistics) using `asyncio.gather` to optimize latency once dependent steps succeed.
 *   **Smart Failure Compensation**: Auto-detects exactly which sub-transactions succeeded and exclusively runs localized reverse/rollback actions (`/refund`, `/release`, `/cancel`).
-*   **Observability**: Integrated Prometheus instrumentation for application metrics.
+*   **Observability**: Integrated Prometheus instrumentation for API and worker metrics, including saga business counters and current stuck gauge.
 *   **Alerts**: Critical failures (e.g., dead orders needing manual intervention) trigger webhook alerts to external notification services.
 
 ## Architecture
@@ -57,12 +57,12 @@ cp .env.example .env
 ### 2. Build and Spin Up Docker Compose
 The system is fully containerized. A single command provisions the database, cache, api router (Nginx), workers, mock environments, and automatically applies Alembic migrations via a dedicated `migrator` service.
 ```bash
-docker-compose up -d --build
+docker compose up -d --build
 ```
 
 ### 3. Verify Health
 Once Docker indicates all containers are running, you can interact with the API:
-- **API Docs (Swagger UI)**: http://localhost/docs
+- **API Docs (Swagger UI)**: http://localhost/api/docs
 - **API Metrics (Prometheus endpoint)**: http://localhost/api/metrics
 - **Prometheus UI**: http://localhost:9090
 - **Grafana UI**: http://localhost:3000 (`admin` / `admin` by default)
@@ -76,9 +76,17 @@ docker logs saga_worker -f
 ### 4. Monitoring Targets Included
 Prometheus is preconfigured to scrape:
 - FastAPI application metrics (`/metrics`)
+- Saga worker metrics (`saga-worker:9101/metrics`)
+- Scheduler worker metrics (`scheduler-worker:9102/metrics`)
 - Redis metrics (via `redis_exporter`)
 - PostgreSQL metrics (via `postgres_exporter`)
 - Linux host metrics (via `node_exporter`)
 
+The provisioned Grafana dashboard includes saga business panels:
+- Compensation Health (Attempted vs Success)
+- CRITICAL: Stuck Sagas (current value from `saga_manual_intervention_required_current`)
+
 ---
 *For detailed API interactions and a visual of the exact SAGA state machine, check out [`docs/API.md`](docs/API.md) and [`docs/architecture/SAGA_ORCHESTRATOR.md`](docs/architecture/SAGA_ORCHESTRATOR.md).*
+
+*For metrics semantics and troubleshooting, see [`docs/OBSERVABILITY.md`](docs/OBSERVABILITY.md).*

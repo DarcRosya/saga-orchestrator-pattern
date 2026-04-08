@@ -16,7 +16,7 @@ stateDiagram
     state process_billing {
         [*] --> check_balance
         check_balance --> deduct_funds
-        deduct_funds --> Http_Mock_Billing: POST http://mock_env/billing/
+      deduct_funds --> Http_Mock_Billing: POST http://mock-env/billing/
     }
     
     process_billing --> Parallel_Execution: Success
@@ -24,9 +24,9 @@ stateDiagram
     
     state Parallel_Execution {
         direction LR
-        process_inventory --> Http_Mock_Inventory: POST http://mock_env/inventory/
+      process_inventory --> Http_Mock_Inventory: POST http://mock-env/inventory/
         --
-        process_logistic --> Http_Mock_Logistic: POST http://mock_env/logistics/
+      process_logistic --> Http_Mock_Logistic: POST http://mock-env/logistics/
     }
     
     Parallel_Execution --> [*] : Both Success (SAGA COMPLETED)
@@ -88,3 +88,5 @@ In distributed systems, transactions can sometimes get "stuck" in a processing o
 **Automated Recovery & Alerts**:
 - Orders stuck in `PROCESSING` are automatically dispatched to the `compensation` task to forcefully roll them back. To bypass ARQ's built-in job result caching and ensure the compensation job is successfully re-enqueued (even if previous attempts failed and their results were cached), the scheduler appends a unique timestamp to the `_job_id`.
 - Orders globally stuck in a `COMPENSATING` state point to a critical rollback failure. These are transitioned to a `MANUAL_INTERVENTION_REQUIRED` state and trigger webhook alerts to external notification services.
+- Scheduler also maintains inventory-style observability by syncing `saga_manual_intervention_required_current` (Gauge) from database state instead of relying only on event counters.
+- Admin `force-cancel` path enqueues a fast sync task (`sync_manual_intervention_gauge`) to refresh the gauge immediately after manual resolution.
