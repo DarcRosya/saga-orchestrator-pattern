@@ -101,6 +101,9 @@ services:
       DB__HOST: database
       DB__PORT: 5432
       REDIS__R_HOST: redis
+      SAGA_SCHEDULER_METRICS_PORT: 9102
+    expose:
+      - "9102"
     depends_on:
       database:
         condition: service_healthy
@@ -129,6 +132,9 @@ services:
       DB__HOST: database
       DB__PORT: 5432
       REDIS__R_HOST: redis
+      SAGA_WORKER_METRICS_PORT: 9101
+    expose:
+      - "9101"
     depends_on:
       database:
         condition: service_healthy
@@ -286,7 +292,8 @@ services:
       GF_USERS_ALLOW_SIGN_UP: "false"
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
     depends_on:
       - prometheus
     deploy:
