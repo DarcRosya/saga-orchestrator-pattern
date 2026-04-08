@@ -1,4 +1,5 @@
 import uuid
+from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Response, status
@@ -45,6 +46,7 @@ async def create(
 async def force_cancel(
     order_id: uuid.UUID,
     db: DBSession,
+    redis: RedisClient,
     current_admin: VerifiedAdmin,
 ) -> dict[str, Any]:
     service = OrderService(db)
@@ -60,6 +62,13 @@ async def force_cancel(
         )
 
     await service.update_global_status(str(order_id), OrderGlobalStatus.CANCELLED)
+
+    await redis.enqueue_job(
+        "sync_manual_intervention_gauge",
+        _job_id=f"sync_manual_intervention_gauge:{int(datetime.now(UTC).timestamp())}",
+        _queue_name="saga:scheduler",
+    )
+
     return {
         "message": f"Order {order_id} forcefully cancelled by admin {current_admin.id}",
         "order_id": order_id,
