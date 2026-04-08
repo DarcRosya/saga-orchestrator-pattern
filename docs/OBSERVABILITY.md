@@ -59,6 +59,16 @@ sum(round(increase(saga_execution_total{status="compensation_attempted"}[1m])))
 sum(round(increase(saga_execution_total{status="compensated"}[1m])))
 ```
 
+### p99 latency panel and "1 second limit"
+
+The dashboard p99 query uses `http_request_duration_seconds_bucket`.
+If this histogram has only low buckets (for example `0.1, 0.5, 1.0, +Inf`), tail visibility above 1 second is coarse and may look visually capped.
+
+In this project, lower buckets were expanded in API instrumentation to:
+`0.1, 0.5, 1, 2.5, 5, 10, 30, 60`.
+
+After deploy/restart, wait for new samples before evaluating p99 trend changes.
+
 ## Fast Diagnostics Checklist
 
 1. Scheduler gauge target is up:
