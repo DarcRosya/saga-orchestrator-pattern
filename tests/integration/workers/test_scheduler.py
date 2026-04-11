@@ -52,12 +52,14 @@ async def test_scheduler_enqueues_stuck_orders(
 
     # Assert
     # Verify Redis enqueue was called for compensation
-    mock_redis.enqueue_job.assert_called_once_with(
-        "compensation",
-        stuck_order.id,
-        _job_id=f"compensation:{stuck_order.id}",
-        _queue_name="saga:tasks",
-    )
+    mock_redis.enqueue_job.assert_called_once()
+    args, kwargs = mock_redis.enqueue_job.call_args
+    assert args == ("compensation", stuck_order.id)
+    assert kwargs.get("_queue_name") == "saga:tasks"
+    job_id = kwargs.get("_job_id")
+    assert isinstance(job_id, str)
+    assert job_id.startswith(f"compensation:{stuck_order.id}:")
+
     # Verify the stuck order's updated_at timestamp got modified to prevent rapid looping
     await db_session.refresh(stuck_order)
     assert stuck_order.updated_at > original_updated_at

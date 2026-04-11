@@ -35,7 +35,7 @@ async def test_create_order_success(
     }
 
     # Act
-    response = await api_client.post("/order/", json=payload)
+    response = await api_client.post("/orders/", json=payload)
     print("RESPONSE", response.json())
 
     # Assert
@@ -86,7 +86,7 @@ async def test_create_order_idempotency_returns_existing(
     }
 
     # Act
-    response = await api_client.post("/order/", json=payload)
+    response = await api_client.post("/orders/", json=payload)
 
     # Assert
     assert response.status_code == 200  # Based on design, it should return 200 OK
@@ -117,7 +117,7 @@ async def test_create_order_good_not_found(api_client: AsyncClient, mock_redis):
     }
 
     # Act
-    response = await api_client.post("/order/", json=payload)
+    response = await api_client.post("/orders/", json=payload)
 
     # Assert
     assert response.status_code == 404
@@ -145,7 +145,7 @@ async def test_create_order_validation_error(api_client: AsyncClient, mock_redis
     }
 
     # Act
-    response = await api_client.post("/order/", json=payload)
+    response = await api_client.post("/orders/", json=payload)
 
     # Assert
     assert response.status_code == 422
@@ -185,7 +185,7 @@ async def test_create_order_invalid_jwt(
     # Act
     # Adding an invalid authorization token
     response = await api_client.post(
-        "/order/", json=payload, headers={"Authorization": "Bearer invalid_token_here"}
+        "/orders/", json=payload, headers={"Authorization": "Bearer invalid_token_here"}
     )
 
     # Assert
@@ -239,7 +239,7 @@ async def test_create_order_bulk_success(
     ]
 
     # Act
-    response = await api_client.post("/order/", json=payload)
+    response = await api_client.post("/orders/", json=payload)
 
     # Assert
     assert response.status_code == 201
