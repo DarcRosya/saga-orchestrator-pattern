@@ -39,9 +39,6 @@ async def setup_test_db() -> AsyncGenerator[AsyncEngine, None]:
 
     yield test_engine
 
-    async with test_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-
 
 @pytest_asyncio.fixture(scope="function")  # type: ignore
 async def db_session(setup_test_db: AsyncEngine) -> AsyncGenerator[AsyncSession, None]:
