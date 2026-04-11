@@ -79,6 +79,35 @@ To up test dependencies:
 docker compose -f docker-compose.test.yml up -d
 ```
 
+Run all tests:
+```bash
+poetry run pytest ./tests/
+```
+
+Run only unit tests:
+```bash
+poetry run pytest ./tests/unit/
+```
+
+Run only integration tests:
+```bash
+poetry run pytest ./tests/integration/
+```
+
+Current test coverage includes:
+- API order and auth flows
+- Order repository and services behavior
+- Saga worker happy path, failure, compensation, and scheduler dispatch
+- Schema validation for auth and order payloads
+- Authorization dependencies (`get_current_user`, `get_optional_current_user`)
+- Security helpers (`hash_password`, `verify_password`)
+- Notifications service (`send_critical_alert`) success and error handling
+
+When finished, stop test infrastructure:
+```bash
+docker compose -f docker-compose.test.yml down
+```
+
 ## Mock Environment (`mock_env`)
 
 Since this is a simulated distributed transaction (Saga Orchestrator), actual external microservices (Billing, Inventory, Logistics) are not present. Instead, a lightweight mock service is included (`mock_env/Dockerfile`).
