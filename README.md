@@ -6,8 +6,6 @@
 ![Redis](https://img.shields.io/badge/Redis-7-DC382D?style=for-the-badge&logo=redis&logoColor=white)
 ![ARQ](https://img.shields.io/badge/ARQ-Workers-DC382D?style=for-the-badge&logo=redis&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)
-![Prometheus](https://img.shields.io/badge/Prometheus-2.53.3-E6522C?style=for-the-badge&logo=prometheus&logoColor=white)
-![Grafana](https://img.shields.io/badge/Grafana-11.2.0-F46800?style=for-the-badge&logo=grafana&logoColor=white)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge&logo=opensourceinitiative&logoColor=white)](https://opensource.org/licenses/MIT)
 
 ## Overview
@@ -32,10 +30,15 @@ This diagram illustrates the high-level boundaries of the Saga Orchestrator syst
 
 ![System Context](docs/architecture/C1-Context.svg)
 
-### Container Diagram (C2)
-The container breakdown demonstrates the internal structure: the FastAPI API Gateway, the PostgreSQL persistence layer, the Redis queue, and the background ARQ workers that perform the actual SAGA choreography.
+### Container Diagram (C2 - Core)
+The core container breakdown shows the FastAPI API Gateway, PostgreSQL persistence, Redis queue, and ARQ workers that execute the saga steps.
 
-![Container Diagram](docs/architecture/C2-Container.svg)
+![Container Diagram Core](docs/architecture/C2-Container-Core.svg)
+
+### Container Diagram (C2 - Observability)
+The observability container view shows the metrics pipeline and monitoring stack used by the system.
+
+![Container Diagram Observability](docs/architecture/C2-Container-Observability.svg)
 
 ## Tech Stack
 
