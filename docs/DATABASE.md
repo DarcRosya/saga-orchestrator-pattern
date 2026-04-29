@@ -21,6 +21,22 @@ Stores PII (Personally Identifiable Information) and delivery context for the or
 - **Primary/Foreign Key**: `order_id` (UUID). This enforces a strict 1-to-1 relationship at the database level.
 - **Fields**: `guest_email`, `guest_phone`, `region`, `city`, `delivery_service`, `postal_address`.
 
+### 3. `users` (Source: `src/db/models/user.py`)
+User accounts used for authentication and admin actions.
+- **Primary Key**: `id` (Integer).
+- **Fields of note**: `username`, `email`, `password_hash`, `slack_account`, `role` (enum), `created_at`.
+
+### 4. `goods` (Source: `src/db/models/good.py`)
+Catalog of items available for ordering.
+- **Primary Key**: `id` (Integer).
+- **Fields of note**: `name`, `price`.
+
+### 5. `refresh_tokens` (Source: `src/db/models/refresh_token.py`)
+Persistent refresh tokens for JWT rotation and logout.
+- **Primary Key**: `id` (Integer).
+- **Foreign Keys**: `user_id` (Users).
+- **Fields of note**: `jti`, `expires_at`, `is_revoked`, `created_at`.
+
 ---
 
 ## Entity Relationship Diagram

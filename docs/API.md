@@ -1,5 +1,8 @@
 # 1. API Documentation
 
+Note: when running through nginx, all routes are available under the `/api` prefix
+(for example, `POST /api/orders/`).
+
 ## [POST] /orders/
 
 **Description:** Creates one or multiple orders. When creating an order, a Saga Orchestrator is initialized in the background to handle the distributed transaction. Supports bulk creation by passing an array of order objects.

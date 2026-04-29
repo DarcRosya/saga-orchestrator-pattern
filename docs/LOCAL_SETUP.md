@@ -112,10 +112,12 @@ docker compose -f docker-compose.test.yml down
 
 Since this is a simulated distributed transaction (Saga Orchestrator), actual external microservices (Billing, Inventory, Logistics) are not present. Instead, a lightweight mock service is included (`mock_env/Dockerfile`).
 
-The `mock-services` container emulates these subdomains and provides endpoints like:
+The `mock-env` container emulates these subdomains and provides endpoints like:
 - `POST /billing/{order_id}`
 - `POST /billing/{order_id}/refund` 
 - `POST /inventory/{order_id}`
 - `POST /inventory/{order_id}/release` 
+- `POST /logistics/{order_id}`
+- `POST /logistics/{order_id}/cancel`
 
 Workers (`src/workers/saga_tasks/`) communicate with this container via HTTP to simulate realistic network boundaries and failures.
