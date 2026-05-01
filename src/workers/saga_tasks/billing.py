@@ -6,6 +6,7 @@ from typing import Any
 import structlog
 from sqlalchemy import select
 
+from src.core.settings import settings
 from src.db.models.enums import OrderGlobalStatus, PaymentWay, SagaStepStatus
 from src.db.models.order import Order
 from src.workers.metrics import observe_step_duration, record_step_status
@@ -45,7 +46,8 @@ async def process_billing(ctx: dict[str, Any], order_id: uuid.UUID) -> None:
                 log.info("Sending billing request")
                 billing_status = SagaStepStatus.FAILED
                 try:
-                    response = await http_client.post(f"http://mock-env:8080/billing/{order_id}")
+                    url = f"{settings.external.BILLING_URL}/{order_id}"
+                    response = await http_client.post(url)
                     if response.status_code == 200:
                         billing_success = True
                         billing_status = SagaStepStatus.SUCCESS

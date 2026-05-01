@@ -5,6 +5,7 @@ from typing import Any
 import structlog
 from sqlalchemy import select
 
+from src.core.settings import settings
 from src.db.models.enums import OrderGlobalStatus, SagaStepStatus
 from src.db.models.order import Order
 from src.workers.metrics import (
@@ -29,7 +30,8 @@ async def process_logistic(ctx: dict[str, Any], order_id: uuid.UUID) -> None:
             log.info("Sending logistic check request")
             logistics_status = SagaStepStatus.FAILED
             try:
-                response = await http_client.post(f"http://mock-env:8080/logistics/{order_id}")
+                url = f"{settings.external.LOGISTICS_URL}/{order_id}"
+                response = await http_client.post(url)
                 if response.status_code == 200:
                     logistics_status = SagaStepStatus.SUCCESS
                 else:

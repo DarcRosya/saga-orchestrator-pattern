@@ -7,6 +7,7 @@ from typing import Any
 import structlog
 from sqlalchemy import select
 
+from src.core.settings import settings
 from src.db.models.enums import OrderGlobalStatus, SagaStepStatus
 from src.db.models.order import Order
 from src.services.notifications import send_critical_alert
@@ -73,15 +74,17 @@ async def compensation(ctx: dict[str, Any], order_id: uuid.UUID, retry_count: in
 
         if billing_refund:
             tasks.append(
-                invoke_refund("billing", f"http://mock-env:8080/billing/{order_id}/refund")
+                invoke_refund("billing", f"{settings.external.BILLING_URL}/{order_id}/refund")
             )
         if inventory_release:
             tasks.append(
-                invoke_refund("inventory", f"http://mock-env:8080/inventory/{order_id}/release")
+                invoke_refund(
+                    "inventory", f"{settings.external.INVENTORY_URL}/{order_id}/release"
+                )
             )
         if logistics_cancel:
             tasks.append(
-                invoke_refund("logistics", f"http://mock-env:8080/logistics/{order_id}/cancel")
+                invoke_refund("logistics", f"{settings.external.LOGISTICS_URL}/{order_id}/cancel")
             )
 
         results: dict[str, bool] = {}
