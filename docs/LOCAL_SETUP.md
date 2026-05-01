@@ -16,6 +16,7 @@ The application uses Pydantic Settings to validate environment variables. Key pa
 - **`DB__USER` / `DB__PASS` / `DB__NAME`**: Database credentials.
 - **`REDIS__R_HOST` / `REDIS__R_PORT`**: Redis connection for caching and ARQ worker queues.
 - **`AUTH__SECRET_KEY`**: JWT encryption key.
+- **`EXTERNAL__BILLING_URL` / `EXTERNAL__INVENTORY_URL` / `EXTERNAL__LOGISTICS_URL`**: Base URLs for external services (defaults point at `mock-env`).
 - **`DEBUG_MODE`**: Enables detailed logging and FastAPI debug features.
 
 ## Local Launch (Docker Compose)
@@ -112,7 +113,9 @@ docker compose -f docker-compose.test.yml down
 
 Since this is a simulated distributed transaction (Saga Orchestrator), actual external microservices (Billing, Inventory, Logistics) are not present. Instead, a lightweight mock service is included (`mock_env/Dockerfile`).
 
-The `mock-env` container emulates these subdomains and provides endpoints like:
+The `mock-env` container emulates these subdomains. Worker tasks use the base URLs from `EXTERNAL__*` settings, which default to `http://mock-env:8080/...`.
+
+It provides endpoints like:
 - `POST /billing/{order_id}`
 - `POST /billing/{order_id}/refund` 
 - `POST /inventory/{order_id}`

@@ -16,7 +16,7 @@ stateDiagram
     state process_billing {
         [*] --> check_balance
         check_balance --> deduct_funds
-      deduct_funds --> Http_Mock_Billing: POST http://mock-env/billing/
+      deduct_funds --> Http_Mock_Billing: POST ${EXTERNAL__BILLING_URL}/
     }
     
     process_billing --> Parallel_Execution: Success
@@ -24,9 +24,9 @@ stateDiagram
     
     state Parallel_Execution {
         direction LR
-      process_inventory --> Http_Mock_Inventory: POST http://mock-env/inventory/
+      process_inventory --> Http_Mock_Inventory: POST ${EXTERNAL__INVENTORY_URL}/
         --
-      process_logistic --> Http_Mock_Logistic: POST http://mock-env/logistics/
+      process_logistic --> Http_Mock_Logistic: POST ${EXTERNAL__LOGISTICS_URL}/
     }
     
     Parallel_Execution --> [*] : Both Success (SAGA COMPLETED)
@@ -63,7 +63,7 @@ The SAGA sequence is coordinated through distributed queues using ARQ connecting
 **Task Enqueuing & Handoff**:
 - The worker executes initial tasks and triggers consequent ones using the ARQ `enqueue_job` method.
 - **Parallel processing:** Unlike a strictly sequential saga, after `process_billing` successfully completes, it enqueues both `process_inventory` and `process_logistic` to run concurrently (`asyncio.gather`).
-- **Mock Microservices (`mock_env`):** Rather than doing the logic internally, tasks make HTTP requests (`http_client.post`) to lightweight mock services representing `billing`, `inventory`, and `logistics` subdomains.
+- **Mock Microservices (`mock_env`):** Rather than doing the logic internally, tasks make HTTP requests (`http_client.post`) to lightweight mock services representing `billing`, `inventory`, and `logistics` subdomains. Base URLs are configured via `EXTERNAL__BILLING_URL`, `EXTERNAL__INVENTORY_URL`, and `EXTERNAL__LOGISTICS_URL` (defaults point at `mock-env`).
 
 **Handling Failures & Retries (Anti-flapping)**:
 - If a mock microservice responds with a non-200 status code, or a network exception is thrown, the task marks the state as `FAILED` and explicitly pushes the order context to the `compensation` function.

@@ -142,7 +142,7 @@ async def process_service_call(
     latency_ms = round((end_time - start_time) * 1000, 2)
 
     logger.info(
-        f"[{service.upper()}] Successfully completed {action} for order {order_id} in {latency_ms}ms"
+        f"[{service.upper()}] Successfully completed {action} for order {order_id} in {latency_ms}ms"  # noqa: E501
     )
 
     return {
