@@ -37,7 +37,10 @@ async def test_order_service_create(db_session: AsyncSession):
     )
 
     # Act
-    order = await service.create(mock_redis, order_data, optional_user=None)
+    saved_orders, existing_orders = await service.create_bulk(
+        mock_redis, [order_data], optional_user=None
+    )
+    order = saved_orders[0] if saved_orders else existing_orders[0]
 
     # Assert
     assert order is not None
@@ -50,6 +53,8 @@ async def test_order_service_create(db_session: AsyncSession):
         _job_id=f"billing_{order.id}",
         _queue_name="saga:tasks",
     )
+
+
 async def test_order_service_create_invalid_good(db_session: AsyncSession):
     service = OrderService(db_session)
     mock_redis = AsyncMock()
@@ -70,7 +75,7 @@ async def test_order_service_create_invalid_good(db_session: AsyncSession):
     )
 
     with pytest.raises(HTTPException) as exc:
-        await service.create(mock_redis, order_data, optional_user=None)
+        await service.create_bulk(mock_redis, [order_data], optional_user=None)
 
     assert exc.value.status_code == 404
 
@@ -118,11 +123,14 @@ async def test_order_service_bulk_create(db_session: AsyncSession):
     ]
 
     # Act
-    orders = await service.create_bulk(mock_redis, order_data_list, optional_user=None)
+    saved_orders, existing_orders = await service.create_bulk(
+        mock_redis, order_data_list, optional_user=None
+    )
 
     # Assert
-    assert len(orders) == 2
-    assert orders[0].good_id == good1.id
-    assert orders[1].good_id == good2.id
+    assert len(saved_orders) == 2
+    assert len(existing_orders) == 0
+    assert saved_orders[0].good_id == good1.id
+    assert saved_orders[1].good_id == good2.id
 
     assert mock_redis.enqueue_job.call_count == 2
