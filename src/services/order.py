@@ -30,13 +30,9 @@ class OrderService:
         await self._session.commit()
         return order
 
-    async def create(self, redis: ArqRedis, data: OrderCreate, optional_user: User | None) -> Order:
-        result = await self.create_bulk(redis, [data], optional_user)
-        return result[0]
-
     async def create_bulk(
         self, redis: ArqRedis, data_list: list[OrderCreate], optional_user: User | None
-    ) -> list[Order]:
+    ) -> tuple[list[Order], list[Order]]:
         good_ids = {d.good_id for d in data_list}
         goods = await self._good_repo.get_many(list(good_ids))
         good_map = {g.id: g for g in goods}
@@ -60,7 +56,7 @@ class OrderService:
             )
             new_orders.append(new_order)
 
-        saved_orders: list[Order] = await self._order_repo.create_bulk(new_orders)
+        saved_orders, existing_orders = await self._order_repo.create_bulk(new_orders)
         await self._session.commit()
 
         redis_tasks = [
@@ -88,4 +84,4 @@ class OrderService:
                 order_id=str(order.id),
             )
 
-        return saved_orders
+        return saved_orders, existing_orders

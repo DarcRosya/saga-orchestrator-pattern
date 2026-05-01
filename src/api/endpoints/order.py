@@ -6,7 +6,6 @@ from fastapi import APIRouter, HTTPException, Response, status
 
 from src.api.dependencies import OptionalCurrentUser, RedisClient, VerifiedAdmin
 from src.core.database import DBSession
-from src.core.exceptions import DuplicateOrderError
 from src.db.models.enums import OrderGlobalStatus
 from src.db.models.order import Order
 from src.schemas.order import OrderCreate, OrderResponse
@@ -20,6 +19,12 @@ admin_router = APIRouter(prefix="/admin/orders", tags=["Admin Order"])
     "/",
     response_model=OrderResponse | list[OrderResponse],
     status_code=status.HTTP_201_CREATED,
+    responses={
+        status.HTTP_200_OK: {
+            "description": "Order already exists (Idempotent response)",
+            "model": OrderResponse | list[OrderResponse],
+        }
+    },
 )
 async def create(
     order_details: OrderCreate | list[OrderCreate],
@@ -29,17 +34,23 @@ async def create(
     response: Response,
 ) -> Order | list[Order]:
     service = OrderService(db)
-    try:
-        is_single = isinstance(order_details, OrderCreate)
-        data_list = [order_details] if is_single else order_details
+    is_single = isinstance(order_details, OrderCreate)
+    data_list = [order_details] if is_single else order_details
 
-        result = await service.create_bulk(
-            redis=redis, data_list=data_list, optional_user=optional_current_user
-        )
-        return result[0] if is_single else result
-    except DuplicateOrderError as exc:
+    saved_orders, existing_orders = await service.create_bulk(
+        redis=redis, data_list=data_list, optional_user=optional_current_user
+    )
+
+    if is_single:
+        if existing_orders:
+            response.status_code = status.HTTP_200_OK
+            return existing_orders[0]
+        return saved_orders[0]
+    elif not saved_orders:
         response.status_code = status.HTTP_200_OK
-        return exc.existing_order
+        return existing_orders
+
+    return saved_orders + existing_orders
 
 
 @admin_router.patch(path="/{order_id}/force-cancel", status_code=status.HTTP_200_OK)

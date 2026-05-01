@@ -1,10 +1,8 @@
 from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import or_, select
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.exceptions import DuplicateOrderError
 from src.db.models.enums import OrderGlobalStatus, SagaStepStatus
 from src.db.models.order import Order
 
@@ -36,56 +34,42 @@ class OrderRepository:
         stmt = select(Order).where(
             or_(
                 # Stuck processing and needs initial compensation
-                (Order.global_status == OrderGlobalStatus.PROCESSING) & or_(
+                (Order.global_status == OrderGlobalStatus.PROCESSING)
+                & or_(
                     Order.billing_status == SagaStepStatus.PENDING,
                     Order.inventory_status == SagaStepStatus.PENDING,
                     Order.logistics_status == SagaStepStatus.PENDING,
                 ),
                 # Stuck compensating and something is still SUCCESS
-                (Order.global_status == OrderGlobalStatus.COMPENSATING) & or_(
+                (Order.global_status == OrderGlobalStatus.COMPENSATING)
+                & or_(
                     Order.billing_status == SagaStepStatus.SUCCESS,
                     Order.inventory_status == SagaStepStatus.SUCCESS,
                     Order.logistics_status == SagaStepStatus.SUCCESS,
-                )
+                ),
             ),
             Order.updated_at < threshold,
         )
         result = await self._session.execute(stmt)
         return list(result.scalars().all())
 
-    async def get_existing_by_idempotency_key(self, key: str) -> Order:
-        stmt = select(Order).where(Order.idempotency_key == key)
-        result = await self._session.execute(stmt)
-        return result.scalar_one()
-
-    async def create(self, order: Order) -> Order:
-        idempotency_key = str(order.idempotency_key)
-        self._session.add(order)
-        try:
-            await self._session.flush()
-            await self._session.refresh(order)
-            return order
-        except IntegrityError:
-            await self._session.rollback()
-            existing = await self.get_existing_by_idempotency_key(idempotency_key)
-            raise DuplicateOrderError(existing) from None
-
     async def get_existing_by_idempotency_keys(self, keys: list[str]) -> list[Order]:
         stmt = select(Order).where(Order.idempotency_key.in_(keys))
         result = await self._session.execute(stmt)
         return list(result.scalars().all())
 
-    async def create_bulk(self, orders: list[Order]) -> list[Order]:
+    async def create_bulk(self, orders: list[Order]) -> tuple[list[Order], list[Order]]:
         keys = [str(o.idempotency_key) for o in orders]
-        self._session.add_all(orders)
-        try:
+
+        existing_orders = await self.get_existing_by_idempotency_keys(keys)
+        existing_keys = {str(e.idempotency_key) for e in existing_orders}
+
+        new_orders = [o for o in orders if str(o.idempotency_key) not in existing_keys]
+
+        if new_orders:
+            self._session.add_all(new_orders)
             await self._session.flush()
-            for order in orders:
+            for order in new_orders:
                 await self._session.refresh(order)
-            return orders
-        except IntegrityError:
-            await self._session.rollback()
-            existing = await self.get_existing_by_idempotency_keys(keys)
-            if existing:
-                raise DuplicateOrderError(existing[0]) from None
-            raise
+
+        return new_orders, existing_orders
