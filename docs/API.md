@@ -36,15 +36,15 @@ JSON object or an array of objects for bulk order creation with the following st
 
 **Responses:**
 
-*   **201 Created**: Successful creation of the order(s).
+*   **201 Created**: Successful creation of at least one new order.
     ```json
     {
       "id": "uuid",
       "global_status": "string (enum)"
     }
     ```
-    *(Or an array of the above object if multiple were passed).*
-*   **200 OK**: Returned in case of a duplicate via idempotent creation (`DuplicateOrderError`) returning the existing order.
+    *(Or an array of the above object if multiple were passed. If some orders already exist, the response includes both newly created and existing orders.)*
+*   **200 OK**: Returned when the request is fully idempotent (single order already exists, or all bulk items already exist), returning the existing order(s).
 *   **422 Unprocessable Entity**: Validation error for request body structure.
 
 ---
