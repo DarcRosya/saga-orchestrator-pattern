@@ -8,6 +8,7 @@ from pytest_httpx import HTTPXMock
 from pytest_mock import MockerFixture
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.settings import settings
 from src.db.models import Good, Order
 from src.db.models.enums import OrderGlobalStatus, PaymentWay, SagaStepStatus
 from src.services.order import OrderService
@@ -86,28 +87,28 @@ async def test_saga_compensation(
     order_id = order.id
 
     httpx_mock.add_response(
-        url=f"http://mock-env:8080/billing/{order_id}",
+        url=f"{settings.external.BILLING_URL}/{order_id}",
         status_code=200,
         json={"status": "ok"},
     )
     httpx_mock.add_response(
-        url=f"http://mock-env:8080/inventory/{order_id}",
+        url=f"{settings.external.INVENTORY_URL}/{order_id}",
         status_code=200,
         json={"status": "ok"},
     )
     httpx_mock.add_response(
-        url=f"http://mock-env:8080/logistics/{order_id}",
+        url=f"{settings.external.LOGISTICS_URL}/{order_id}",
         status_code=500,
         json={"error": "boom"},
     )
 
     httpx_mock.add_response(
-        url=f"http://mock-env:8080/billing/{order_id}/refund",
+        url=f"{settings.external.BILLING_URL}/{order_id}/refund",
         status_code=200,
         json={"status": "refunded"},
     )
     httpx_mock.add_response(
-        url=f"http://mock-env:8080/inventory/{order_id}/release",
+        url=f"{settings.external.INVENTORY_URL}/{order_id}/release",
         status_code=200,
         json={"status": "released"},
     )
@@ -163,7 +164,7 @@ async def test_saga_billing_failed(
 
     # Billing fails
     httpx_mock.add_response(
-        url=f"http://mock-env:8080/billing/{order_id}",
+        url=f"{settings.external.BILLING_URL}/{order_id}",
         status_code=500,
         json={"error": "insufficient funds"},
     )
@@ -219,12 +220,12 @@ async def test_saga_postpayment_path(
 
     # Only inventory and logistics need to be mocked
     httpx_mock.add_response(
-        url=f"http://mock-env:8080/inventory/{order_id}",
+        url=f"{settings.external.INVENTORY_URL}/{order_id}",
         status_code=200,
         json={"status": "success"},
     )
     httpx_mock.add_response(
-        url=f"http://mock-env:8080/logistics/{order_id}",
+        url=f"{settings.external.LOGISTICS_URL}/{order_id}",
         status_code=200,
         json={"status": "success"},
     )
