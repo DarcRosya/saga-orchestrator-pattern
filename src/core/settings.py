@@ -1,5 +1,5 @@
 from arq.connections import RedisSettings as ArqRedisSettings
-from pydantic import BaseModel, SecretStr
+from pydantic import BaseModel, Field, SecretStr
 from pydantic.networks import PostgresDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -60,6 +60,14 @@ class SlackSettings(BaseModel):
     WEBHOOK_URL: str = "https://hooks.slack.com/services/bla-bla"
 
 
+class ExternalServicesSettings(BaseModel):
+    """Base URLs for external service endpoints."""
+
+    BILLING_URL: str = "http://mock-env:8080/billing"
+    INVENTORY_URL: str = "http://mock-env:8080/inventory"
+    LOGISTICS_URL: str = "http://mock-env:8080/logistics"
+
+
 class Settings(BaseSettings):
     """
     The main class aggregator, which is the sole source of configuration for the entire application.
@@ -80,6 +88,7 @@ class Settings(BaseSettings):
     redis: RedisSettings
     auth: AuthSettings
     slack: SlackSettings
+    external: ExternalServicesSettings = Field(default_factory=ExternalServicesSettings)
 
 
 settings = Settings()  # type: ignore[call-arg]
